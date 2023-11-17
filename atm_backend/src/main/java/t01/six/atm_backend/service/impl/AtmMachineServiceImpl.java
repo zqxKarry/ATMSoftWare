@@ -27,6 +27,17 @@ public class AtmMachineServiceImpl extends ServiceImpl<AtmMachineMapper,AtmMachi
     }
 
     @Override
+    public Result<?> checkAtmPaperCount(String atmId) {
+         AtmMachine atm = atmMachineMapper.selectById(atmId);
+        if(atm==null){
+            return Result.error("1","网络不稳定或机器出现故障,请稍后重试或者进行维修");
+        }
+        else{
+            return Result.success(atm);
+        }
+    }
+
+    @Override
     public Result<?> adminAddRMB(Integer addCount, String atmId) {
         AtmMachine atm = atmMachineMapper.selectById(atmId);
         if(atm==null){
@@ -42,7 +53,7 @@ public class AtmMachineServiceImpl extends ServiceImpl<AtmMachineMapper,AtmMachi
                 Double orginBalance = atm.getAtmBalance() + addCount * 100.00;
                 atm.setAtmBalance(orginBalance);
                 atmMachineMapper.updateById(atm);
-                return Result.success();
+                return Result.success(atm);
             }
             
         }
@@ -64,7 +75,7 @@ public class AtmMachineServiceImpl extends ServiceImpl<AtmMachineMapper,AtmMachi
                 Double orginBalance = atm.getAtmBalance() - takeCount * 100.00;
                 atm.setAtmBalance(orginBalance);
                 atmMachineMapper.updateById(atm);
-                return Result.success();
+                return Result.success(atm);
             }
             
         }
@@ -86,7 +97,7 @@ public class AtmMachineServiceImpl extends ServiceImpl<AtmMachineMapper,AtmMachi
                 Integer orginCount = atm.getAtmPaperCount() + addPaperCount;
                 atm.setAtmPaperCount(orginCount);
                 atmMachineMapper.updateById(atm);
-                return Result.success();
+                return Result.success(atm);
             } 
         }
     }

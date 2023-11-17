@@ -27,7 +27,7 @@
         <div v-if="oneORtwo" style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
         <!-- 对话框底部按钮 -->
         <span slot="footer" class="dialog-footer">
-          <el-button :disabled = "isShowButt" @click="closeDialog" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
+          <el-button :disabled = "isDisButt" @click="closeDialog" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
         </span>
       </el-dialog>
       </div>
@@ -50,7 +50,7 @@ export default {
       messageDialog: false,
       messageContent: '',
       num: 0,
-      isShowButt: false,
+      isDisButt: false,
       oneORtwo: false,
       isShow: false
     }
@@ -66,7 +66,7 @@ export default {
       this.messageContent = '' // 提示内容
       this.oneORtwo = true
       this.isShow = false
-      this.isShowButt = false
+      this.isDisButt = false
       this.adminPass = ''
     },
     navigateToAdminOperation () {
@@ -107,13 +107,13 @@ export default {
           if (this.num <= 0) {
             this.messageContent = '账号已经锁定,请到柜台解锁后重试！'
             this.messageDialog = true
-            this.isShowButt = true
+            this.isDisButt = true
             this.oneORtwo = false
             setTimeout(() => {
               this.navigateToDeskTop()
             }, 3000)
           } else {
-            this.isShowButt = false
+            this.isDisButt = false
             this.oneORtwo = true
             this.messageContent = '员工账号对应密码错误，请重试！'
             this.messageDialog = true

@@ -2,6 +2,9 @@
     <div class="container">
       <div class="desktopBack">
       <atmheader></atmheader>
+      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+        <i class="el-icon-loading" style="font-size: 100px;"></i>
+      </div>
         <label class="input-name" style="font-size: 55px;">请输入添加的数量</label>
         <input class="input-text" v-model="addCount" type="number" readonly>
         <div class="passBack">
@@ -19,11 +22,10 @@
       <div>
       <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
         <!-- 对话框内容 -->
-        <span class="dialog-content"> 密码错误！请重新输入!<br>超过3次输入错误密码将自动报警</span><br>
-        <div style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
+        <span class="dialog-content"> {{ this.message }}</span><br>
         <!-- 对话框底部按钮 -->
         <span slot="footer" class="dialog-footer">
-          <el-button @click="messageDialog = false" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
+          <el-button :disabled = "isDisButt" @click="messageDialog = false" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
         </span>
       </el-dialog>
       </div>
@@ -33,7 +35,6 @@
 import request from '@/utils/request'
 import atmheader from '../components/atmHeader.vue'
 import Keypad from '../components/KeyPad.vue'
-// import request from '../utils/request'
 export default {
   components: {
     atmheader,
@@ -42,7 +43,10 @@ export default {
   data () {
     return {
       messageDialog: false,
-      addCount: ''
+      addCount: '',
+      message: '',
+      isDisButt: false,
+      isShow: false
     }
   },
   methods: {
@@ -57,15 +61,36 @@ export default {
       if (key === '退格') {
         this.addCount = this.addCount.slice(0, -1)
       } else if (key === '确认') {
-        this.addRMBCount(this.addCount, this.$store.state.atmId)
+        this.isShow = true
+        setTimeout(() => {
+          this.addRMBCount(this.addCount, this.$store.state.atmId)
+        }, 2000)
         // 执行确认操作
       } else {
         this.addCount += key
       }
     },
     addRMBCount (addCount, atmId) {
-      const url = '/atm/admin-addcount?addCount=' + addCount + '&' + 'atmId=' + atmId
-      request.get(url).then(res => {
+      const url = '/atm/admin-addrmb?addCount=' + addCount + '&' + 'atmId=' + atmId
+      request.post(url).then(res => {
+        this.isShow = false
+        if (res.code === '0') {
+          this.message = '添加成功，您辛苦了！'
+          this.messageDialog = true
+          this.isDisButt = false
+          this.addCount = ''
+        } else if (res.code === '1') {
+          this.message = res.msg
+          this.messageDialog = true
+          this.isDisButt = true
+          setTimeout(() => {
+            this.navigateToDeskTop()
+          }, 3000)
+        } else {
+          this.message = res.msg
+          this.messageDialog = true
+          this.isDisButt = false
+        }
       })
     }
   }

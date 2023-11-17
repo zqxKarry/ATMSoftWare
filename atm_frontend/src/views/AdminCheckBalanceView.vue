@@ -37,7 +37,7 @@ export default {
       restCount: 0
     }
   },
-  mounted () {
+  created () {
     this.checkBalance()
   },
   methods: {

@@ -24,6 +24,12 @@ public class AtmMachineController {
         return atmMachineService.checkAtmBalance(atmId);
     }
 
+    @GetMapping("/check-pcount")
+    public Result<?> checkAtmPaperCount(@RequestParam(defaultValue = "") String atmId)
+    {
+        return atmMachineService.checkAtmPaperCount(atmId);
+    }
+
     @PostMapping("/admin-addrmb")
     public Result<?> adminAddRMB(@RequestParam Integer addCount,
                                 @RequestParam(defaultValue = "") String atmId)
@@ -39,10 +45,10 @@ public class AtmMachineController {
     }
 
     @PostMapping("/admin-addpaper")
-    public Result<?> adminAddPaper(@RequestParam Integer addPaperCount,
+    public Result<?> adminAddPaper(@RequestParam Integer addCount,
                                 @RequestParam(defaultValue = "") String atmId)
     {
-        return atmMachineService.adminAddPaper(addPaperCount, atmId);
+        return atmMachineService.adminAddPaper(addCount, atmId);
     }
     
 }

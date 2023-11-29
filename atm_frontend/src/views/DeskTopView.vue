@@ -6,7 +6,7 @@
         <label class="fontStyle"><i class="el-icon-back"></i>管理员</label>
       </el-button>
       <div class="card-slot0">
-        <el-input v-model="cardNumber" style="width:80%;color:bisque" placeholder="请输入16位银行卡号"></el-input>
+        <el-input v-model="cardid" style="width:80%;color:bisque" placeholder="请输入16位银行卡号"></el-input>
       </div>
       <div class="cardArea" @click="insertCard">
         <card @key-click="handleCardClick"></card>
@@ -14,7 +14,6 @@
       <el-dialog
         title="正在读卡请稍后..."
         :visible="readingCardDialog"
-        :custom-class="['reading-card-dialog']"
         width="50%"
         :before-close="handleClose">
         <span>
@@ -29,6 +28,34 @@
           </div>
         </span>
       </el-dialog>
+      <el-dialog
+        title="正在退卡请等待..."
+        :visible="returnCardDialog"
+        width="50%">
+        <span>
+          <span style="font-size:20px">{{ this.message }},请收好</span>
+          <div style="height: 400px;">
+            <i class="el-icon-loading" style="font-size: 50px;"></i>
+            <!-- 对话框内容 -->
+            <div style="height:30px"></div>
+            <div style="display:flex">
+              <div style="width:35%"></div>
+              <returncard ref="returncardref"></returncard>
+              <div style="width:30%"></div>
+            </div>
+          </div>
+        </span>
+      </el-dialog>
+      <div>
+      <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
+        <!-- 对话框内容 -->
+        <span class="dialog-content">{{ this.message }}</span>
+        <!-- 对话框底部按钮 -->
+        <span slot="footer" class="dialog-footer">
+          <!-- <el-button @click="messageDialog = false" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button> -->
+        </span>
+      </el-dialog>
+    </div>
     </div>
   </div>
 </template>
@@ -36,15 +63,22 @@
 import card from '../components/card.vue'
 import atmheader from '../components/atmHeader.vue'
 import readcard from '../components/ReadCard.vue'
+import returncard from '../components/ReturnCard.vue'
+import request from '@/utils/request'
 export default {
   components: {
     card,
     atmheader,
-    readcard
+    readcard,
+    returncard
   },
   data () {
     return {
-      readingCardDialog: false
+      returnCardDialog: false,
+      readingCardDialog: false,
+      cardid: '',
+      message: '',
+      messageDialog: false
     }
   },
   methods: {
@@ -57,16 +91,52 @@ export default {
       this.readingCardDialog = true
       this.startInsertionAnimation()
       setTimeout(() => {
+        this.checkCardId(this.cardid)
+      }, 4000)
+    },
+    startInsertionAnimation () {
+      this.$nextTick(() => {
+        this.$refs.insertcardref.startInsertionAnimation()
+      })
+    },
+    returnCard () {
+      this.returnCardDialog = true
+      this.startReturnAnimation()
+      setTimeout(() => {
+        this.returnCardDialog = false
+        this.$nextTick(() => {
+          // 退卡动画结束
+          this.$refs.returncardref.Rreturn()
+        })
+      }, 5000)
+    },
+    startReturnAnimation () {
+      this.$nextTick(() => {
+        this.$refs.returncardref.startReturnAnimation()
+      })
+    },
+    checkCardId (cardId) {
+      const url = '/card/check-id?cardid=' + cardId
+      request.get(url).then(res => {
         this.readingCardDialog = false
         this.$nextTick(() => {
           this.$refs.insertcardref.Rreturn()
         })
-      }, 5000)
+        if (res.code === '0') {
+          this.navigateToUserCheckPass(cardId)
+        } else {
+          this.message = res.msg
+          this.returnCard()
+        }
+      })
     },
-    startInsertionAnimation () {
-      // this.$refs.insertcardref.startInsertionAnimation()
-      this.$nextTick(() => {
-        this.$refs.insertcardref.startInsertionAnimation()
+    navigateToUserCheckPass (cardId) {
+      // 执行页面跳转逻辑
+      this.$router.push({
+        name: 'usercheckpass',
+        params: {
+          cardId: cardId
+        }
       })
     }
   }
@@ -162,12 +232,42 @@ export default {
   transform-origin: left top;
 }
 
-.reading-card-diolog {
+/* .reading-card-diolog {
   border: 2px solid red;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   width: 50%;
-  height: 30px;
+  height: 200px;
   z-index: 9999;
+} */
+
+/* .return-card-dialog {
+  border: 2px solid red;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  width: 50%;
+  height: 200px;
+  z-index: 9999;
+} */
+
+.custom-dialog .el-dialog__header {
+  background-color: rgb(172, 140, 140);
 }
+
+.custom-dialog .el-dialog__body {
+  background-color: rgb(172, 140, 140);
+}
+
+.custom-dialog .el-dialog__footer {
+  background-color: rgb(172, 140, 140);
+  text-align: center;
+}
+
+.dialog-content {
+  font-size: 72px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: rgb(224, 32, 32);
+  text-align: center;
+}
+
 </style>

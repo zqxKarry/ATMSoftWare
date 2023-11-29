@@ -3,6 +3,7 @@ package t01.six.atm_backend.service.impl;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
+import t01.six.atm_backend.entity.Admin;
 import t01.six.atm_backend.entity.Card;
 // import t01.six.atm_backend.entity.CardRecord;
 import t01.six.atm_backend.mapper.AtmMachineMapper;
@@ -26,7 +27,7 @@ public class CardServiceImpl implements CardService{
         else{
             Integer num = card.getNum();
             if(num<=0){
-                return Result.error("2", "账号已被锁定");
+                return Result.error("2", "密码连续错误三次,此卡已被锁定,请到柜台解锁");
             }
             else{
                 return Result.success();
@@ -37,20 +38,25 @@ public class CardServiceImpl implements CardService{
     @Override
     public Result<?> checkCardPassword(String cardid, String cardpassword) {
         Card card = cardMapper.selectById(cardid);
+        System.out.println(cardid+"  "+cardpassword);
         if(card==null){
             return Result.error("1","出错了,卡已退出,请重试");
         }
         else{
             if(card.getCardPassword().equals(cardpassword))
             {
-                return Result.success();
+                return Result.success(card);
             }
             else{
                 Integer num = card.getNum();
                 num--;
                 card.setNum(num);
                 cardMapper.updateById(card);
-                return Result.error("2","密码错误");
+                Result<Card> result = new Result<>();
+                result.setCode("2");
+                result.setMsg("密码错误!");
+                result.setData(card);
+                return result;
             }
         }
     }

@@ -15,6 +15,6 @@ public interface CardMapper extends BaseMapper<Card> {
 
      @Update("UPDATE card SET num = #{card.num}, cardpassword = #{card.cardpassword},"+
             " carduserid = #{card.carduserid}, cardbalance = #{card.cardbalance}, "+
-            "cardopenid = #{card.cardopenid}, cardphone = #{card.cardphone}  WHERE cardid = #{card.cardid}")
+            "cardopenplaceid = #{card.cardopenplaceid}, cardphone = #{card.cardphone}  WHERE cardid = #{card.cardid}")
      int updateById(@Param("card") Card card);
 }

@@ -45,6 +45,46 @@ const routes = [
     path: '/admintakermb',
     name: 'admintakermb',
     component: () => import(/* webpackChunkName: "desktop" */ '../views/AdminTakeRMBView.vue')
+  },
+  {
+    path: '/usercheckpass/:cardId',
+    name: 'usercheckpass',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserCheckPassView.vue')
+  },
+  {
+    path: '/useroperation',
+    name: 'useroperation',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserOperationView.vue')
+  },
+  {
+    path: '/userstorermb',
+    name: 'userstorermb',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserStoreRMBView.vue')
+  },
+  {
+    path: '/usertakermb',
+    name: 'userstorermb',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserStoreRMBView.vue')
+  },
+  {
+    path: '/usercheckbalance',
+    name: 'usercheckbalance',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserCheckBalanceView.vue')
+  },
+  {
+    path: '/userchangepassword',
+    name: 'userchangepassword',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserChangePasswordView.vue')
+  },
+  {
+    path: '/usertransfer',
+    name: 'usertransfer',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserTransferView.vue')
+  },
+  {
+    path: '/usergetallrecord',
+    name: 'usergetallrecord',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserGetAllRecordView.vue')
   }
 ]
 const router = new VueRouter({

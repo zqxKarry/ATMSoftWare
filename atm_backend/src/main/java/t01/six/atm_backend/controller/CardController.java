@@ -2,29 +2,34 @@ package t01.six.atm_backend.controller;
 
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import t01.six.atm_backend.service.impl.CardServiceImpl;
 import t01.six.atm_backend.utils.Result;
 
 @RestController
 @RequestMapping("/card")
 public class CardController {
-    
+
+    @Autowired
+    CardServiceImpl cardService;
+
     @GetMapping("/check-id")
     public Result<?> checkCardId(@RequestParam(defaultValue="")String cardid)
     {
-        return null;
+        return cardService.checkCardId(cardid);
     }
 
     @GetMapping("/check-pass")
     public Result<?> checkCardPassword(@RequestParam(defaultValue="")String cardid,
                                     @RequestParam(defaultValue="")String cardpassword)
     {
-        return null;
+        return cardService.checkCardPassword(cardid,cardpassword);
     }
 
     @GetMapping("/check-bala")

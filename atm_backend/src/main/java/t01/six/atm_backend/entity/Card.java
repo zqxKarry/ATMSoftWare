@@ -17,7 +17,7 @@ public class Card {
     private String carduserid;
     private String cardpassword;
     private Double cardbalance;
-    private String cardopenid;
+    private String cardopenplaceid;
     private String cardphone;
     private Integer num;
 
@@ -53,12 +53,12 @@ public class Card {
         this.cardbalance = cardbalance;
     }
 
-    public String getCardOpenId(){
-        return this.cardopenid;
+    public String getCardOpenPlaceId(){
+        return this.cardopenplaceid;
     }
 
-    public void setCardOpenId(String cardopenid){
-        this.cardopenid = cardopenid;
+    public void setCardOpenPlaceId(String cardopenplaceid){
+        this.cardopenplaceid = cardopenplaceid;
     }
 
     public String getCardPhone(){

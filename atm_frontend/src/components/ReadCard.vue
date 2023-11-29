@@ -34,10 +34,6 @@ export default {
   methods: {
     startInsertionAnimation () {
       this.isCardInserted = true
-      // 模拟动画执行时间
-      setTimeout(() => {
-        this.isAnimating = false
-      }, 2000)
     },
     beforeEnter (el) {
       el.style.transform = 'rotate(90deg)'

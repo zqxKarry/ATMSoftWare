@@ -129,8 +129,15 @@ public class CardServiceImpl implements CardService{
 
     @Override
     public Result<?> changePassword(String cardid, String newpassword) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'changePassword'");
+        Card card = cardMapper.selectById(cardid);
+        if(card==null){
+            return Result.error("1","出错了,卡已退出,请重试");
+        }
+        else{
+            card.setCardPassword(newpassword);
+            cardMapper.updateById(card);
+            return Result.success();
+        }
     }
 
     @Override

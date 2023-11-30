@@ -35,7 +35,7 @@ public class CardController {
     @GetMapping("/check-bala")
     public Result<?> checkBalance(@RequestParam(defaultValue="")String cardid)
     {
-        return null;
+        return cardService.checkBalance(cardid);
     }
 
     @GetMapping("/print-voucher")
@@ -71,7 +71,7 @@ public class CardController {
     public Result<?> changePassword(@RequestParam(defaultValue="") String cardid,
                                     @RequestParam(defaultValue = "") String newpassword)
     {
-        return null;
+        return cardService.changePassword(cardid,newpassword);
     }
 
     @PostMapping("/transfer")

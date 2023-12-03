@@ -37,7 +37,6 @@
 import request from '@/utils/request'
 import Keypad from '../components/KeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
-import { mapMutations } from 'vuex'
 
 export default {
   components: {
@@ -59,7 +58,6 @@ export default {
     this.whenRefresh()
   },
   methods: {
-    ...mapMutations(['setCardInfo']),
     whenRefresh () {
       this.num = 0
       this.messageDialog = false

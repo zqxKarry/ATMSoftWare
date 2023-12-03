@@ -45,12 +45,11 @@ public class CardController {
         return null;
     }
 
-    @PostMapping("/user-addrmb")
-    public Result<?> userAddRMB(@RequestParam(defaultValue="") String cardid,
-                                @RequestParam(defaultValue="") Double addAmount,
+    @PostMapping("/user-storermb")
+    public Result<?> userStoreRMB(@RequestParam(defaultValue="") String cardid,Integer reallyNum,
                                 @RequestParam(defaultValue="") String atmId)
     {
-        return null;
+        return cardService.userStoreRMB(cardid, reallyNum, atmId);
     }
 
     @PostMapping("/user-takermb")
@@ -58,7 +57,7 @@ public class CardController {
                                 @RequestParam(defaultValue = "") Double takeAmount,
                                  @RequestParam(defaultValue="") String atmId)
     {
-        return null;
+        return cardService.userTakeRMB(cardid, takeAmount, atmId);
     }
 
     @GetMapping("/get-allrecord")

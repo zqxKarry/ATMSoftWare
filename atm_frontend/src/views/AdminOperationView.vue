@@ -87,57 +87,7 @@ export default {
     align-items: center; /* 垂直居中 */
 }
 
-.passBack {
-    /* 输入密码盘背景 */
-    position: absolute;
-    width: 628px;
-    height: 780px;
-    left: 759px;
-    top: 194px;
-    background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
-    opacity: 0.54;
-    border-radius: 20px;
-    border: 6px solid #c0c0c0;
-    border-style: rgb(31, 32, 51);
-    display: flex;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
-}
-
-.input-name {
-    /* 请输入员工号： */
-    position: absolute;
-    width: 486px;
-    height: 87px;
-    left: 159px;
-    right: 849px;
-    top: 300px;
-    bottom: 801px;
-    color: rgb(72, 161, 87);
-    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-    font-size: 72px;
-    font-weight: 400;
-    line-height: 86px;
-    letter-spacing: 0px;
-    text-align: left;
-    text-shadow: 2px 2px 4px rgba(212, 52, 116, 0.5);
-}
-.input-text {
-    /* 密码框 */
-    position: absolute;
-    width: 465px;
-    height: 97px;
-    left: 150px;
-    right: 821px;
-    top: 450px;
-    bottom: 487px;
-    background: rgb(195, 170, 170);
-    border-radius: 20px;
-    text-align: center;
-    font-size: 50px;
-}
-
-/* 两个按钮 */
+/* 按钮 */
 .butt {
     position: absolute;
     width: 272px;

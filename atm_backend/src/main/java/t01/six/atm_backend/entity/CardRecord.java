@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 
-@TableName("card_record")
+@TableName("user_record")
 @Data
 public class CardRecord {
 

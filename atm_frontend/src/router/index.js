@@ -62,9 +62,19 @@ const routes = [
     component: () => import(/* webpackChunkName: "desktop" */ '../views/UserStoreRMBView.vue')
   },
   {
+    path: '/userstoresuccess/:storeNum/:recordid',
+    name: 'userstoresuccess',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserStoreSuccessView.vue')
+  },
+  {
     path: '/usertakermb',
-    name: 'userstorermb',
-    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserStoreRMBView.vue')
+    name: 'usertakermb',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserTakeRMBView.vue')
+  },
+  {
+    path: '/usertakesuccess/:takeAmount/:recordid',
+    name: 'usertakesuccess',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserTakeSuccessView.vue')
   },
   {
     path: '/usercheckbalance',

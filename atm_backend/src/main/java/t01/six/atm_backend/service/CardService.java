@@ -8,7 +8,7 @@ public interface CardService {
     public Result<?> checkCardPassword(String cardid,String cardpassword);
     public Result<?> checkBalance(String cardid);
     public Result<?> printVoucher(String recordid);
-    public Result<?> userAddRMB(String cardid,Double addAmount,String atmId);
+    public Result<?> userStoreRMB(String cardid,Integer reallyNum,String atmId);
     public Result<?> userTakeRMB(String cardid, Double takeAmount, String atmId);
     public Result<?> getAllCardRecord(String cardid);
     public Result<?> changePassword(String cardid, String newpassword);

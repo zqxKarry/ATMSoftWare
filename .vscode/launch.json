@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AtmBackendApplication",
+            "request": "launch",
+            "mainClass": "t01.six.atm_backend.AtmBackendApplication",
+            "projectName": "atm_backend"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"

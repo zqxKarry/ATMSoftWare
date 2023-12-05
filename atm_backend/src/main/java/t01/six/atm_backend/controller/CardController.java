@@ -76,8 +76,9 @@ public class CardController {
     @PostMapping("/transfer")
     public Result<?> transfer(@RequestParam(defaultValue="") String cardid1,
                               @RequestParam(defaultValue = "") String cardid2,
+                             @RequestParam(defaultValue = "") Double amount,
                              @RequestParam(defaultValue = "")String atmId)
     {
-        return null;
+        return cardService.transfer(cardid1, amount, cardid2, atmId);
     }
 }

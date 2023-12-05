@@ -7,7 +7,7 @@
             <label class="fontStyle"><i class="el-icon-back"></i>退卡</label>
           </el-button>
           <el-button class="butt" style="top: 850px; margin-left:1130px;" @click="navigateToOperation">
-            <label class="fontStyle">返回上级<i class="el-icon-right"></i></label>
+            <label class="fontStyle">返回<i class="el-icon-right"></i></label>
           </el-button>
         </div>
       </div>

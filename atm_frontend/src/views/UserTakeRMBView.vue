@@ -10,7 +10,6 @@
       </div>
       <label class="input-name1">请选择或者输入取款金额</label>
       <input class="input-text1" v-model="takeAmount"  readonly>
-      <label class="input-name1">请选择或者输入取款金额</label>
       <label class="input-name1" style="left:440px;top:800px; font-size: 40px;">本ATM机只提供100元人民币面额</label>
       <label class="input-name1" style="left:435px;top:860px; font-size: 40px;width: 1000px;">单次取款最大额度为1000元人民币</label>
         <div>

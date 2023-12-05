@@ -92,6 +92,11 @@ const routes = [
     component: () => import(/* webpackChunkName: "desktop" */ '../views/UserTransferView.vue')
   },
   {
+    path: '/userconfirminfo/:amount/:cardid2',
+    name: 'userconfirminfo',
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserConfirmInfoView.vue')
+  },
+  {
     path: '/usergetallrecord',
     name: 'usergetallrecord',
     component: () => import(/* webpackChunkName: "desktop" */ '../views/UserGetAllRecordView.vue')

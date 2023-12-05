@@ -1,5 +1,6 @@
 package t01.six.atm_backend.entity;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -20,7 +21,7 @@ public class CardRecord {
     private String optype;
     private String opway;
     private double amount;
-    private Date time;
+    private LocalDateTime time;
     private String cardid1;
 
     public String getRecordId() {
@@ -63,11 +64,11 @@ public class CardRecord {
         this.amount = amount;
     }
 
-    public Date getTime() {
+    public LocalDateTime getTime() {
         return time;
     }
 
-    public void setTime(Date time) {
+    public void setTime(LocalDateTime time) {
         this.time = time;
     }
 

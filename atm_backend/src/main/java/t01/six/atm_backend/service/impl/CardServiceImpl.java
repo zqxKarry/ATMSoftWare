@@ -1,6 +1,7 @@
 package t01.six.atm_backend.service.impl;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.Date;
 
@@ -119,23 +120,24 @@ public class CardServiceImpl implements CardService{
             atmBalance +=  reallyNum*100.00;
             atm.setAtmBalance(atmBalance);
             atmMachineMapper.updateById(atm);
-            // 随机生成recordid并插入记录
-            String recordid =  generateSerialNumber(atmId);
-            CardRecord newRecord  = cardRecordMapper.selectById(recordid);
-            while(newRecord!=null){
-                // 如果有重复，继续随机生成
-                recordid =  generateSerialNumber(atmId);
-                newRecord  = cardRecordMapper.selectById(recordid);
-            }
-            newRecord = new CardRecord();
-            // 订单号确定
-            newRecord.setRecordId(recordid);
-            newRecord.setCardId(cardid);
-            newRecord.setCardId1(atmId);
-            newRecord.setAmount(reallyNum*100.00);
-            newRecord.setOpType("store");
-            newRecord.setOpWay("atm");
-            cardRecordMapper.save(newRecord);
+            CardRecord newRecord = addTransactionRecord(cardid, "store", "atm", reallyNum*100.00, atmId, atmId);
+            // // 随机生成recordid并插入记录
+            // String recordid =  generateSerialNumber(atmId);
+            // CardRecord newRecord  = cardRecordMapper.selectById(recordid);
+            // while(newRecord!=null){
+            //     // 如果有重复，继续随机生成
+            //     recordid =  generateSerialNumber(atmId);
+            //     newRecord  = cardRecordMapper.selectById(recordid);
+            // }
+            // newRecord = new CardRecord();
+            // // 订单号确定
+            // newRecord.setRecordId(recordid);
+            // newRecord.setCardId(cardid);
+            // newRecord.setCardId1(atmId);
+            // newRecord.setAmount(reallyNum*100.00);
+            // newRecord.setOpType("store");
+            // newRecord.setOpWay("atm");
+            // cardRecordMapper.save(newRecord);
             result.setData(newRecord);
             return result;
         }
@@ -143,7 +145,7 @@ public class CardServiceImpl implements CardService{
 
     @Override
     public Result<?> userTakeRMB(String cardid, Double takeAmount, String atmId) {
-        System.out.println(cardid + " " +atmId);
+        // System.out.println(cardid + " " +atmId);
         Card card = cardMapper.selectById(cardid);
         AtmMachine atm = atmMachineMapper.selectById(atmId);
         if(card==null || atm == null)
@@ -174,23 +176,24 @@ public class CardServiceImpl implements CardService{
             atmBalance -= takeAmount;
             atm.setAtmBalance(atmBalance);
             atmMachineMapper.updateById(atm);
-            // 随机生成recordid并插入记录
-            String recordid =  generateSerialNumber(atmId);
-            CardRecord newRecord  = cardRecordMapper.selectById(recordid);
-            while(newRecord!=null){
-                // 如果有重复，继续随机生成
-                recordid =  generateSerialNumber(atmId);
-                newRecord  = cardRecordMapper.selectById(recordid);
-            }
-            newRecord = new CardRecord();
-            // 订单号确定
-            newRecord.setRecordId(recordid);
-            newRecord.setCardId(cardid);
-            newRecord.setCardId1(atmId);
-            newRecord.setAmount(takeAmount);
-            newRecord.setOpType("take");
-            newRecord.setOpWay("atm");
-            cardRecordMapper.save(newRecord);
+            CardRecord newRecord = addTransactionRecord(cardid, "take", "atm", takeAmount, atmId, atmId);
+            // // 随机生成recordid并插入记录
+            // String recordid =  generateSerialNumber(atmId);
+            // CardRecord newRecord  = cardRecordMapper.selectById(recordid);
+            // while(newRecord!=null){
+            //     // 如果有重复，继续随机生成
+            //     recordid =  generateSerialNumber(atmId);
+            //     newRecord  = cardRecordMapper.selectById(recordid);
+            // }
+            // newRecord = new CardRecord();
+            // // 订单号确定
+            // newRecord.setRecordId(recordid);
+            // newRecord.setCardId(cardid);
+            // newRecord.setCardId1(atmId);
+            // newRecord.setAmount(takeAmount);
+            // newRecord.setOpType("take");
+            // newRecord.setOpWay("atm");
+            // cardRecordMapper.save(newRecord);
             result.setCode("4");
             result.setMsg("成功");
             result.setData(newRecord);
@@ -218,15 +221,62 @@ public class CardServiceImpl implements CardService{
     }
 
     @Override
-    public Result<?> transfer(String cardid1, Double amount, String cardid2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'transfer'");
+    public Result<?> transfer(String cardid1, Double amount, String cardid2, String atmId) {
+        Card card1 = cardMapper.selectById(cardid1);
+        Card card2 = cardMapper.selectById(cardid2);
+        // AtmMachine atm = atmMachineMapper.selectById(atmId);
+        if(card1==null||card2 == null)
+        {
+            return Result.error("1","出错了,卡已退出,请重试");
+        }
+        else
+        {
+            // 情况2:余额不足
+            if(card1.getCardBalance()<amount){
+                return Result.error("2","余额不足");
+            }
+            else
+            {
+                //情况3可以转账
+                Double orginBalance1 = card1.getCardBalance();
+                orginBalance1 -= amount;
+                card1.setCardBalance(orginBalance1);
+                cardMapper.updateById(card1);
+                Double orginBalance2 = card2.getCardBalance();
+                orginBalance2 += amount;
+                card2.setCardBalance(orginBalance2);
+                cardMapper.updateById(card2);
+                CardRecord newRecord1 = addTransactionRecord(cardid1, "transreduce", "atm", amount, cardid2, atmId);
+                addTransactionRecord(cardid2, "transadd", "atm", amount, cardid1, atmId);
+                Result<CardRecord> result = new Result<>();
+                result.setCode("0");
+                result.setData(newRecord1);
+                result.setMsg("转账成功");
+                return result;
+            }
+        }
     }
 
     @Override
-    public Result<?> addTransactionRecord(String cardid1, String opway, Double amount, String cardid2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addTransactionRecord'");
+    public CardRecord addTransactionRecord(String cardid1, String optype, String opway, Double amount, String cardid2, String atmId) {
+        String recordid =  generateSerialNumber(atmId);
+        CardRecord newRecord  = cardRecordMapper.selectById(recordid);
+        while(newRecord!=null){
+            // 如果有重复，继续随机生成
+            recordid =  generateSerialNumber(atmId);
+            newRecord  = cardRecordMapper.selectById(recordid);
+        }
+        newRecord = new CardRecord();
+        // 订单号确定
+        newRecord.setRecordId(recordid);
+        newRecord.setCardId(cardid1);
+        newRecord.setCardId1(cardid2);
+        newRecord.setAmount(amount);
+        newRecord.setOpType(optype);
+        newRecord.setOpWay(opway);
+        newRecord.setTime(LocalDateTime.now());
+        cardRecordMapper.save(newRecord);
+        return newRecord;
     }
 
     public static String generateSerialNumber(String atmId) {

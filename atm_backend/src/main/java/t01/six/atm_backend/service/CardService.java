@@ -8,10 +8,10 @@ public interface CardService {
     public Result<?> checkCardId(String cardid);
     public Result<?> checkCardPassword(String cardid,String cardpassword);
     public Result<?> checkBalance(String cardid);
-    public Result<?> printVoucher(String recordid);
     public Result<?> userStoreRMB(String cardid,Integer reallyNum,String atmId);
     public Result<?> userTakeRMB(String cardid, Double takeAmount, String atmId);
-    public Result<?> getAllCardRecord(String cardid);
+    public Result<?> getRecentCardRecord(String cardid);
+    public Result<?> getOneCardRecord(String recordid);
     public Result<?> changePassword(String cardid, String newpassword);
     public Result<?> transfer(String cardid1,Double amount,String cardid2,String atmId);
 
@@ -22,5 +22,5 @@ public interface CardService {
      *cardid2：对方卡号 or "atm"
      *amount：交易金额
      */
-    public CardRecord addTransactionRecord(String cardid1,String optype, String opway,Double amount,String cardid2,String atmId);
+    public CardRecord addTransactionRecord(String cardid1,String optype, String opway,Double amount,String cardid2,String atmId, Double balance);
 }

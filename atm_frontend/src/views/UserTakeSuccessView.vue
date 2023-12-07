@@ -2,6 +2,9 @@
     <div class="container">
       <div class="desktopBack">
       <atmheader></atmheader>
+      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+        <i class="el-icon-loading" style="font-size: 100px;"></i>
+      </div>
         <div>
           <el-button class="butt" style="top: 850px;" @click="navigateToDeskTop">
             <label class="fontStyle"><i class="el-icon-back"></i>退卡</label>
@@ -9,7 +12,7 @@
           <el-button class="butt" style="top: 650px;margin-left:0px;" @click="navigateToUserOperation">
             <label class="fontStyle"><i class="el-icon-back"></i>返回</label>
           </el-button>
-          <el-button class="butt" style="top: 850px; margin-left:1130px;" @click="generatePDF">
+          <el-button class="butt" style="top: 850px; margin-left:1130px;" @click="getRecordInfo">
             <label class="fontStyle">打印凭条<i class="el-icon-right"></i></label>
           </el-button>
           <el-button class="butt" style="top: 650px; margin-left:1130px;" @click="navigateToUserTakeRMB">
@@ -25,16 +28,20 @@
             共计<span class="special"> {{ this.price }} </span>元
           </span><br>
       </div>
+      <div>
+        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
+        <!-- 对话框内容 -->
+        <span class="dialog-content">{{ this.messageContent }}<br>
+        </span>
+      </el-dialog>
+      </div>
     </div>
 </template>
 <script>
-// import request from '@/utils/request'
+import request from '@/utils/request'
 import atmheader from '../components/atmHeader.vue'
-// import pdfMake from 'pdfmake/build/pdfmake'
-// /* eslint-disable camelcase */
-// const vfs_fonts = require('@/assets/fonts')
-// /* eslint-disable camelcase */
-// pdfMake.vfs = vfs_fonts.pdfMake.vfs
+import pdfMake from 'pdfmake/build/pdfmake'
+import pdfFonts from 'pdfmake/build/vfs_fonts'
 
 export default {
   components: {
@@ -44,15 +51,16 @@ export default {
     return {
       takeCount: 0, // 操作数量
       price: 0,
-      recordId: ''
+      recordId: '',
+      cardId: '',
+      transactionDetails: {},
+      messageDialog: false,
+      messageContent: '',
+      isShow: false
     }
   },
   mounted () {
-    this.$router.beforeEach((to, from, next) => {
-      console.log('跳转前路径：', from.path)
-      console.log('跳转后路径：', to.path)
-      next()
-    })
+    pdfMake.vfs = pdfFonts.pdfMake.vfs
     this.writePage()
   },
   methods: {
@@ -71,51 +79,121 @@ export default {
       this.price = this.$route.params.takeAmount
       this.takeCount = this.price / 100
     },
-    printVoucher () {
-
+    generateAndPrintPDF () {
+      const transactionMethodFormatted = this.formatTransactionMethod(this.transactionDetails.opType)
+      const transactionTimeFormatted = this.formatTransactionTime(this.transactionDetails.time)
+      const transactionCardtd1Formatted = this.formatTransactionCardid1(this.transactionDetails.cardId1)
+      const docDefinition = {
+        content: [
+          { text: '    吉大软工T01银行ATM 凭条', style: 'header' },
+          '================================================',
+          { text: '交易时间 Date and Time: ' + transactionTimeFormatted, style: 'normal' },
+          { text: '本人账户 Account No.: ' + this.cardId, style: 'normal' },
+          { text: '终端编号 Terminal: ' + this.$store.state.atmId, style: 'normal' },
+          { text: '交易类型 Trans.Type: ' + transactionMethodFormatted, style: 'normal' },
+          { text: '交易金额 Amount: ' + this.transactionDetails.amount.toFixed(2), style: 'normal' },
+          { text: '账户余额 Balance: ' + this.transactionDetails.balance.toFixed(2), style: 'normal' },
+          { text: '交易账户 Transfer to: ' + transactionCardtd1Formatted, style: 'normal' },
+          { text: '交易结果 Result:  成功/OK', style: 'normal' },
+          { text: '交易序号 Serial No. : ' + this.transactionDetails.recordId, style: 'normal' },
+          '================================================',
+          '感谢您选择我们的 ATM 服务。',
+          '如有任何疑问，请致电客服热线:0000-0101。'
+        ],
+        styles: {
+          header: {
+            fontSize: 24,
+            bold: true,
+            // alignment: 'center',
+            margin: [0, 0, 0, 10]
+          },
+          normal: {
+            fontSize: 12,
+            bold: true,
+            lineHeight: 0.5,
+            // alignment: 'center',
+            margin: [0, 0, 0, 20]
+          }
+        },
+        defaultStyle: {
+          font: '方正姚体'
+        }
+      }
+      pdfMake.fonts = {
+        Roboto: {
+          normal: 'Roboto-Regular.ttf',
+          bold: 'Roboto-Medium.ttf',
+          italics: 'Roboto-Italic.ttf',
+          bolditalics: 'Roboto-Italic.ttf'
+        },
+        方正姚体: {
+          normal: 'FZYTK.TTF',
+          bold: 'FZYTK.TTF',
+          italics: 'FZYTK.TTF',
+          bolditalics: 'FZYTK.TTF'
+        }
+      }
+      pdfMake.createPdf(docDefinition).download('voucher.pdf')
+      this.messageContent = '完成打印,请收好凭条'
+      setTimeout(() => {
+        this.messageDialog = true
+      }, 2000)
+      setTimeout(() => {
+        this.messageDialog = false
+        this.navigateToUserTakeRMB()
+      }, 3000)
     },
-    // generatePDF () {
-    //   const documentDefinition = {
-    //     content: [
-    //       {
-    //         text: '你好，世界！',
-    //         font: 'simsunb',
-    //         fontSize: 12
-    //       }
-    //     ],
-    //     defaultStyle: {
-    //       font: '方正姚体',
-    //       header: {
-    //         fontSize: 22,
-    //         bold: true,
-    //         margin: [5, 50]
-    //       },
-    //       splitInfo: {
-    //         fontSize: 22,
-    //         color: 'blue'
-    //       }
-    //     }
-    //   }
-    //   pdfMake.fonts = {
-    //     Roboto: {
-    //       normal: 'Roboto-Regular.ttf',
-    //       bold: 'Roboto-Medium.ttf',
-    //       italics: 'Roboto-Italic.ttf',
-    //       bolditalics: 'Roboto-Italic.ttf'
-    //     },
-    //     方正姚体: {
-    //       normal: 'SIMLI.TTF',
-    //       bold: 'SIMLI.TTF',
-    //       italics: 'SIMLI.TTF',
-    //       bolditalics: 'SIMLI.TTF'
-    //     }
-    //   }
-    //   const pdfDocGenerator = pdfMake.createPdf(documentDefinition)
-    //   // 下载PDF
-    //   pdfDocGenerator.download('ATM_voucher.pdf')
-    // },
+    formatTransactionMethod (opType) {
+      // 根据实际需求进行交易类型的替换
+      // 将英文的交易类型替换为对应的汉字
+      if (opType === 'store') {
+        return '存款'
+      } else if (opType === 'take') {
+        return '取款'
+      } else if (opType === 'transadd') {
+        return '转入'
+      } else if (opType === 'transreduce') {
+        return '转出'
+      } else {
+        return ''
+      }
+    },
+    formatTransactionTime (transactionTime) {
+      // 根据实际需求进行时间格式的处理
+      const date = new Date(transactionTime)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hour = String(date.getHours()).padStart(2, '0')
+      const minute = String(date.getMinutes()).padStart(2, '0')
+      const second = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    },
+    formatTransactionCardid1 (cardId1) {
+      if (cardId1.length < 16) {
+        return ''
+      } else {
+        return cardId1
+      }
+    },
     getRecordInfo () {
-
+      this.isShow = true
+      const url = '/card/get-onerecord?recordid=' + this.recordId
+      request.get(url).then(res => {
+        if (res.code === '1') {
+          this.isShow = false
+          this.messageContent = res.msg
+          setTimeout(() => {
+            this.messageDialog = true
+          }, 2000)
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 2000)
+        } else {
+          this.transactionDetails = res.data
+          this.generateAndPrintPDF()
+        }
+      })
     }
   }
 }

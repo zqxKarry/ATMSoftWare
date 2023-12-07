@@ -169,7 +169,7 @@ export default {
     checkCardId (cardId) {
       const url = '/card/check-id?cardid=' + cardId
       request.get(url).then(res => {
-        if (res.code === '0') {
+        if (res.code === '0' || res.code === '2') {
           // 账户存在生成订单
           // console.log('我是真的')
           this.navigateToUserConfirmInfo(Number(this.amount), this.cardid2)

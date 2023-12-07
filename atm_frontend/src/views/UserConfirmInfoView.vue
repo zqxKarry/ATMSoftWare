@@ -13,7 +13,7 @@
           <el-button  v-show="isShowNotPrint" class="butt" style="top: 850px; margin-left: 1130px" @click="navigateToUserOperation">
             <label class="fontStyle">取消业务<i class="el-icon-right"></i></label>
           </el-button>
-          <el-button v-show="isShowPrint" class="butt" style="top: 850px;margin-left: 0px;" @click="printVoucher">
+          <el-button v-show="isShowPrint" class="butt" style="top: 850px;margin-left: 0px;" @click="getRecordInfo">
             <label class="fontStyle"><i class="el-icon-back"></i>打印凭条</label>
           </el-button>
           <el-button  v-show="isShowPrint" class="butt" style="top: 850px; margin-left: 1130px" @click="navigateToUserOperation">
@@ -47,11 +47,14 @@
 <script>
 import atmheader from '../components/atmHeader.vue'
 import request from '@/utils/request'
+import pdfMake from 'pdfmake/build/pdfmake'
+import pdfFonts from 'pdfmake/build/vfs_fonts'
 export default {
   components: {
     atmheader
   },
   mounted () {
+    pdfMake.vfs = pdfFonts.pdfMake.vfs
     this.cardid2 = this.$route.params.cardid2
     this.amount = this.$route.params.amount
   },
@@ -98,6 +101,122 @@ export default {
             this.messageDialog = false
             this.navigateToUserOperation()
           }, 3000)
+        }
+      })
+    },
+    generateAndPrintPDF () {
+      const transactionMethodFormatted = this.formatTransactionMethod(this.transactionDetails.opType)
+      const transactionTimeFormatted = this.formatTransactionTime(this.transactionDetails.time)
+      const transactionCardtd1Formatted = this.formatTransactionCardid1(this.transactionDetails.cardId1)
+      const docDefinition = {
+        content: [
+          { text: '    吉大软工T01银行ATM 凭条', style: 'header' },
+          '================================================',
+          { text: '交易时间 Date and Time: ' + transactionTimeFormatted, style: 'normal' },
+          { text: '本人账户 Account No.: ' + this.cardId, style: 'normal' },
+          { text: '终端编号 Terminal: ' + this.$store.state.atmId, style: 'normal' },
+          { text: '交易类型 Trans.Type: ' + transactionMethodFormatted, style: 'normal' },
+          { text: '交易金额 Amount: ' + this.transactionDetails.amount.toFixed(2), style: 'normal' },
+          { text: '账户余额 Balance: ' + this.transactionDetails.balance.toFixed(2), style: 'normal' },
+          { text: '交易账户 Transfer to: ' + transactionCardtd1Formatted, style: 'normal' },
+          { text: '交易结果 Result:  成功/OK', style: 'normal' },
+          { text: '交易序号 Serial No. : ' + this.transactionDetails.recordId, style: 'normal' },
+          '================================================',
+          '感谢您选择我们的 ATM 服务。',
+          '如有任何疑问，请致电客服热线:0000-0101。'
+        ],
+        styles: {
+          header: {
+            fontSize: 24,
+            bold: true,
+            // alignment: 'center',
+            margin: [0, 0, 0, 10]
+          },
+          normal: {
+            fontSize: 12,
+            bold: true,
+            lineHeight: 0.5,
+            // alignment: 'center',
+            margin: [0, 0, 0, 20]
+          }
+        },
+        defaultStyle: {
+          font: '方正姚体'
+        }
+      }
+      pdfMake.fonts = {
+        Roboto: {
+          normal: 'Roboto-Regular.ttf',
+          bold: 'Roboto-Medium.ttf',
+          italics: 'Roboto-Italic.ttf',
+          bolditalics: 'Roboto-Italic.ttf'
+        },
+        方正姚体: {
+          normal: 'FZYTK.TTF',
+          bold: 'FZYTK.TTF',
+          italics: 'FZYTK.TTF',
+          bolditalics: 'FZYTK.TTF'
+        }
+      }
+      pdfMake.createPdf(docDefinition).download('voucher.pdf')
+      this.messageContent = '完成打印,请收好凭条'
+      setTimeout(() => {
+        this.messageDialog = true
+      }, 2000)
+      setTimeout(() => {
+        this.messageDialog = false
+        this.navigateToUserOperation()
+      }, 3000)
+    },
+    formatTransactionMethod (opType) {
+      // 根据实际需求进行交易类型的替换
+      // 将英文的交易类型替换为对应的汉字
+      if (opType === 'store') {
+        return '存款'
+      } else if (opType === 'take') {
+        return '取款'
+      } else if (opType === 'transadd') {
+        return '转入'
+      } else if (opType === 'transreduce') {
+        return '转出'
+      } else {
+        return ''
+      }
+    },
+    formatTransactionTime (transactionTime) {
+      // 根据实际需求进行时间格式的处理
+      const date = new Date(transactionTime)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hour = String(date.getHours()).padStart(2, '0')
+      const minute = String(date.getMinutes()).padStart(2, '0')
+      const second = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    },
+    formatTransactionCardid1 (cardId1) {
+      if (cardId1.length < 16) {
+        return ''
+      } else {
+        return cardId1
+      }
+    },
+    getRecordInfo () {
+      this.isShow = true
+      const url = '/card/get-onerecord?recordid=' + this.record.recordId
+      request.get(url).then(res => {
+        if (res.code === '1') {
+          this.isShow = false
+          this.messageContent = res.msg
+          setTimeout(() => {
+            this.messageDialog = true
+          }, 2000)
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 2000)
+        } else {
+          this.transactionDetails = res.data
+          this.generateAndPrintPDF()
         }
       })
     }

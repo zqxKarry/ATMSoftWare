@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -82,12 +83,6 @@ public class CardServiceImpl implements CardService{
     }
 
     @Override
-    public Result<?> printVoucher(String recordid) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'printVoucher'");
-    }
-
-    @Override
     public Result<?> userStoreRMB(String cardid, Integer reallyNum, String atmId) {
         System.out.println(cardid + " " +atmId);
         Card card = cardMapper.selectById(cardid);
@@ -120,24 +115,7 @@ public class CardServiceImpl implements CardService{
             atmBalance +=  reallyNum*100.00;
             atm.setAtmBalance(atmBalance);
             atmMachineMapper.updateById(atm);
-            CardRecord newRecord = addTransactionRecord(cardid, "store", "atm", reallyNum*100.00, atmId, atmId);
-            // // 随机生成recordid并插入记录
-            // String recordid =  generateSerialNumber(atmId);
-            // CardRecord newRecord  = cardRecordMapper.selectById(recordid);
-            // while(newRecord!=null){
-            //     // 如果有重复，继续随机生成
-            //     recordid =  generateSerialNumber(atmId);
-            //     newRecord  = cardRecordMapper.selectById(recordid);
-            // }
-            // newRecord = new CardRecord();
-            // // 订单号确定
-            // newRecord.setRecordId(recordid);
-            // newRecord.setCardId(cardid);
-            // newRecord.setCardId1(atmId);
-            // newRecord.setAmount(reallyNum*100.00);
-            // newRecord.setOpType("store");
-            // newRecord.setOpWay("atm");
-            // cardRecordMapper.save(newRecord);
+            CardRecord newRecord = addTransactionRecord(cardid, "store", "atm", reallyNum*100.00, atmId, atmId,orginBalance);
             result.setData(newRecord);
             return result;
         }
@@ -176,24 +154,7 @@ public class CardServiceImpl implements CardService{
             atmBalance -= takeAmount;
             atm.setAtmBalance(atmBalance);
             atmMachineMapper.updateById(atm);
-            CardRecord newRecord = addTransactionRecord(cardid, "take", "atm", takeAmount, atmId, atmId);
-            // // 随机生成recordid并插入记录
-            // String recordid =  generateSerialNumber(atmId);
-            // CardRecord newRecord  = cardRecordMapper.selectById(recordid);
-            // while(newRecord!=null){
-            //     // 如果有重复，继续随机生成
-            //     recordid =  generateSerialNumber(atmId);
-            //     newRecord  = cardRecordMapper.selectById(recordid);
-            // }
-            // newRecord = new CardRecord();
-            // // 订单号确定
-            // newRecord.setRecordId(recordid);
-            // newRecord.setCardId(cardid);
-            // newRecord.setCardId1(atmId);
-            // newRecord.setAmount(takeAmount);
-            // newRecord.setOpType("take");
-            // newRecord.setOpWay("atm");
-            // cardRecordMapper.save(newRecord);
+            CardRecord newRecord = addTransactionRecord(cardid, "take", "atm", takeAmount, atmId, atmId,orginBalance);
             result.setCode("4");
             result.setMsg("成功");
             result.setData(newRecord);
@@ -201,10 +162,11 @@ public class CardServiceImpl implements CardService{
         }
     }
 
+    // 查询近十条记录
     @Override
-    public Result<?> getAllCardRecord(String cardid) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllCardRecord'");
+    public Result<?> getRecentCardRecord(String cardid) {
+        List<CardRecord> records = cardRecordMapper.selectRecentRecordsByCardId(cardid);
+        return Result.success(records);
     }
 
     @Override
@@ -246,8 +208,8 @@ public class CardServiceImpl implements CardService{
                 orginBalance2 += amount;
                 card2.setCardBalance(orginBalance2);
                 cardMapper.updateById(card2);
-                CardRecord newRecord1 = addTransactionRecord(cardid1, "transreduce", "atm", amount, cardid2, atmId);
-                addTransactionRecord(cardid2, "transadd", "atm", amount, cardid1, atmId);
+                CardRecord newRecord1 = addTransactionRecord(cardid1, "transreduce", "atm", amount, cardid2, atmId,orginBalance1);
+                addTransactionRecord(cardid2, "transadd", "atm", amount, cardid1, atmId,orginBalance2);
                 Result<CardRecord> result = new Result<>();
                 result.setCode("0");
                 result.setData(newRecord1);
@@ -258,7 +220,7 @@ public class CardServiceImpl implements CardService{
     }
 
     @Override
-    public CardRecord addTransactionRecord(String cardid1, String optype, String opway, Double amount, String cardid2, String atmId) {
+    public CardRecord addTransactionRecord(String cardid1, String optype, String opway, Double amount, String cardid2, String atmId, Double balance) {
         String recordid =  generateSerialNumber(atmId);
         CardRecord newRecord  = cardRecordMapper.selectById(recordid);
         while(newRecord!=null){
@@ -275,6 +237,7 @@ public class CardServiceImpl implements CardService{
         newRecord.setOpType(optype);
         newRecord.setOpWay(opway);
         newRecord.setTime(LocalDateTime.now());
+        newRecord.setBalance(balance);
         cardRecordMapper.save(newRecord);
         return newRecord;
     }
@@ -287,6 +250,18 @@ public class CardServiceImpl implements CardService{
         String truncatedTimestamp = timestamp.substring(0, 10);
         String serialNumber = truncatedMachineNumber + randomOrderNumber + truncatedTimestamp;
         return serialNumber;
+    }
+
+    @Override
+    public Result<?> getOneCardRecord(String recordid) {
+        CardRecord oneRecord = cardRecordMapper.selectOneRecordById(recordid);
+        if(oneRecord == null){
+            return Result.error("1", "打印出错，请重新操作或者到柜台办理");
+        }
+        else
+        {
+            return Result.success(oneRecord);
+        }
     }
 
 

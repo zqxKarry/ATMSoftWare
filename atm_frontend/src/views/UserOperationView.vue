@@ -22,7 +22,7 @@
           <el-button class="butt" style="top: 650px; margin-left:1130px;" @click="navigateToChangePassword">
             <label class="fontStyle">修改密码<i class="el-icon-right"></i></label>
           </el-button>
-          <el-button class="butt" style="top: 450px; margin-left:1130px;" @click="navigateToGetAllRecord">
+          <el-button class="butt" style="top: 450px; margin-left:1130px;" @click="navigateToGetRecentRecord">
             <label class="fontStyle">查看流水<i class="el-icon-right"></i></label>
           </el-button>
         </div>
@@ -59,8 +59,8 @@ export default {
     navigateToTransfer () {
       this.$router.push('/usertransfer')
     },
-    navigateToGetAllRecord () {
-      this.$router.push('/usergetallrecord')
+    navigateToGetRecentRecord () {
+      this.$router.push('/usergetrecentrecord')
     },
     navigateToChangePassword () {
       this.$router.push('/userchangepassword')

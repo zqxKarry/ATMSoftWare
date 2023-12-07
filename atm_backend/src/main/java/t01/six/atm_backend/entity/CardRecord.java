@@ -23,6 +23,7 @@ public class CardRecord {
     private double amount;
     private LocalDateTime time;
     private String cardid1;
+    private double balance; //交易后余额
 
     public String getRecordId() {
         return recordid;
@@ -78,5 +79,13 @@ public class CardRecord {
 
     public void setCardId1(String cardid1) {
         this.cardid1 = cardid1;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
     }
 }

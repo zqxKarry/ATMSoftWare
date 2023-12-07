@@ -2,7 +2,17 @@ package t01.six.atm_backend.controller;
 
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,13 +48,6 @@ public class CardController {
         return cardService.checkBalance(cardid);
     }
 
-    @GetMapping("/print-voucher")
-    public Result<?> printVoucher(@RequestParam(defaultValue="")String recordid,
-                                  @RequestParam(defaultValue="") String atmId)
-    {
-        return null;
-    }
-
     @PostMapping("/user-storermb")
     public Result<?> userStoreRMB(@RequestParam(defaultValue="") String cardid,Integer reallyNum,
                                 @RequestParam(defaultValue="") String atmId)
@@ -60,10 +63,16 @@ public class CardController {
         return cardService.userTakeRMB(cardid, takeAmount, atmId);
     }
 
-    @GetMapping("/get-allrecord")
-    public Result<?> getAllCardRecord(@RequestParam(defaultValue="")String cardid)
+    @GetMapping("/get-recentrecord")
+    public Result<?> getRecentCardRecord(@RequestParam(defaultValue="")String cardid)
     {
-        return null;
+        return cardService.getRecentCardRecord(cardid);
+    }
+
+    @GetMapping("/get-onerecord")
+    public Result<?> getOneCardRecord(@RequestParam(defaultValue="")String recordid)
+    {
+        return cardService.getOneCardRecord(recordid);
     }
 
     @PostMapping("/change-password")

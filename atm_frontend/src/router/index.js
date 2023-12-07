@@ -97,9 +97,9 @@ const routes = [
     component: () => import(/* webpackChunkName: "desktop" */ '../views/UserConfirmInfoView.vue')
   },
   {
-    path: '/usergetallrecord',
+    path: '/usergetrecentrecord',
     name: 'usergetallrecord',
-    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserGetAllRecordView.vue')
+    component: () => import(/* webpackChunkName: "desktop" */ '../views/UserGetRecentRecordView.vue')
   }
 ]
 const router = new VueRouter({

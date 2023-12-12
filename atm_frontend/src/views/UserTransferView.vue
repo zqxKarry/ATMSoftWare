@@ -154,15 +154,21 @@ export default {
         } else {
           this.cardid2 = this.str
           this.str = ''
-          if (this.checkCardId2(this.cardid2)) {
+          if (this.checkCardId2(this.cardid2) === 1) {
             // 核验cardid2是否存在，存在生成确认页面，不存在直接提示账户出错
             this.checkCardId(this.cardid2)
-          } else {
+          } else if (this.checkCardId2(this.cardid2) === 3) {
             this.messageContent = '请输入16位银行卡号'
             this.messageDialog = true
             setTimeout(() => {
               this.messageDialog = false
             }, 3000)
+          } else {
+            this.messageContent = '不能给本账户转账'
+            this.messageDialog = true
+            setTimeout(() => {
+              this.messageDialog = false
+            }, 2000)
           }
         }
         // 执行确认操作
@@ -181,7 +187,7 @@ export default {
       })
     },
     checkAmout () {
-      if (this.str === '0' && this.takeAmount === '') {
+      if (Number(this.str) === 0 && this.takeAmount === '') {
         // 是0或者空
         return 1
       } else if (Number(this.str) > 1000) {
@@ -192,11 +198,15 @@ export default {
       }
     },
     checkCardId2 (cardid2) {
+      const cardInfo = JSON.parse(sessionStorage.getItem('cardInfo'))
+      const cardId = cardInfo.cardId
       // 检查是不是16位
       if (cardid2.length === 16) {
-        return true
+        if (cardid2 === cardId) {
+          return 2
+        } else return 1
       } else {
-        return false
+        return 3
       }
     },
     checkCardId (cardId) {

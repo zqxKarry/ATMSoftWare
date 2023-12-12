@@ -1,13 +1,21 @@
 
 <template>
     <div class="container">
+      <div class="numberboard">
+        <KeyPad></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
+      <div class="countdown-container">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
+        </div>
+      </div>
         <div>
           <el-button class="butt" style="top: 850px; margin-left: 0px" @click="navigateToUserOperation">
             <label class="fontStyle"><i class="el-icon-back"></i>返回</label>
           </el-button>
-          <el-button class="butt" style="top: 850px; margin-left:1130px;" @click="navigateToDeskTop">
+          <el-button class="butt" style="top: 850px; margin-left:1130px;" @click="navigateToDeskTopAndReturnCard">
             <label class="fontStyle">退卡<i class="el-icon-right"></i></label>
           </el-button>
         </div>
@@ -22,7 +30,15 @@
           </el-table>
         </div>
         <div>
-         <p style="font-size:20px;top: 20px;color: rgb(252, 240, 255);">注：显示近十条交易记录，如需查看更多，请去柜台或者手机银行查看</p>
+         <p style="font-size:20px;top: 20px;color: rgb(252, 240, 255);">{{this.messageTip}}</p>
+        </div>
+      </div>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div  class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}
+          </div>
         </div>
       </div>
     </div>
@@ -30,16 +46,31 @@
 <script>
 import atmheader from '../components/atmHeader.vue'
 import request from '@/utils/request'
+import KeyPad from '@/components/KeyPad.vue'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
+
 export default {
   components: {
-    atmheader
+    atmheader,
+    KeyPad
   },
   data () {
     return {
-      records: []
+      countdownTime: 60,
+      timer: null,
+      records: [],
+      messageTip: '注：显示近十条交易记录，如需查看更多，请去柜台或者手机银行查看',
+      messageDialog: false,
+      messageContent: ''
     }
   },
   mounted () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
     this.getTransactions()
   },
   computed: {
@@ -63,10 +94,25 @@ export default {
     navigateToUserOperation () {
       this.$router.push('/useroperation')
     },
-    navigateToDeskTop () {
+    navigateToDeskTopAndReturnCard () {
       // 执行页面跳转逻辑
-      // 需要调用退卡动画
-      this.$router.push('/')
+      // 执行退卡动画
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     getTransactions () {
       const cardInfo = JSON.parse(sessionStorage.getItem('cardInfo'))
@@ -75,6 +121,8 @@ export default {
       request.get(url).then(res => {
         if (res.code === '0') {
           this.records = res.data
+        } else {
+          this.messageTip = '系统错误，请退出重试或者到柜台办理相关业务'
         }
       })
     },
@@ -105,16 +153,46 @@ export default {
       return `${year}-${month}-${day} ${hour}:${minute}:${second}`
     },
     formatTransactionCardid1 (cardId1) {
+      const cardInfo = JSON.parse(sessionStorage.getItem('cardInfo'))
+      const cardId = cardInfo.cardId
       if (cardId1.length < 16) {
         if (cardId1.length === 8) {
-          return 'atm:' + cardId1
+          return cardId
         } else {
           return ''
         }
       } else {
         return cardId1
       }
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
@@ -129,7 +207,7 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left; /* 水平居左 */
     align-items: center; /* 垂直居中 */
 }
 
@@ -159,7 +237,47 @@ export default {
 }
 
 .transaction-table {
-  margin: 20px auto;
+  margin-top: 50px;
+  margin-left: 100px;
+  /* margin: 20px auto; */
   width: 1200px;
+}
+
+.numberboard {
+    /* 输入盘背景 */
+    position: absolute;
+    width: 628px;
+    height: 780px;
+    left: 1600px;
+    top: 194px;
+    background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
+    opacity: 0.54;
+    border-radius: 20px;
+    border: 6px solid #c0c0c0;
+    border-style: rgb(31, 32, 51);
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+}
+
+.countdown-container {
+  width: 200px;
+  position: relative;
+  top: 10px; /* 距离顶部的距离 */
+  left: 1200px; /* 距离右侧的距离 */
+  z-index: 9999; /* 设置层级，确保在其他元素之上 */
+}
+
+.countdown {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.countdown-timer {
+  margin-top: 10px;
 }
 </style>

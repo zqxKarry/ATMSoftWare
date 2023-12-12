@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h2>机械键盘</h2>
-     <div class="keypad">
+    <h2>管理员输入键盘</h2>
+    <div class="keypad">
       <div class="row" v-for="row in keypadRows" :key="row">
         <div class="key key-cell" v-for="key in row" :key="key" @click="handleKeyClick(key)">
         {{ key }}
@@ -14,7 +14,7 @@
 export default {
   data () {
     return {
-      keypadRows: [[1, 2, 3], [4, 5, 6], [7, 8, 9], ['退格', 0, '确认']]
+      keypadRows: [[1, 2, 3, '#'], [4, 5, 6, '%'], [7, 8, 9, 'D'], ['退格', 0, '确认', '重置']]
     }
   },
   methods: {
@@ -50,13 +50,13 @@ export default {
 
 .key-cell {
   /* 添加您想要的样式 */
-    width: 90px;
-    height: 110px;
-    left: 66px;
-    background: rgb(255, 255, 255);
-    border-radius: 20px;
-    font-size: 45px;
-    font-family: 等线;
+  width: 90px;
+  height: 110px;
+  left: 66px;
+  background: rgb(255, 255, 255);
+  border-radius: 20px;
+  font-size: 45px;
+  font-family: 等线;
   /* 其他样式属性 */
 }
 

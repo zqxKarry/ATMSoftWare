@@ -55,6 +55,9 @@ public class CardServiceImpl implements CardService{
         else{
             if(card.getCardPassword().equals(cardpassword))
             {
+                //匹配成功一次就恢复到3次
+                card.setNum(3);
+                cardMapper.updateById(card);
                 return Result.success(card);
             }
             else{
@@ -103,7 +106,13 @@ public class CardServiceImpl implements CardService{
                     return result;
                 }
             }
-            else{
+            else if(reallyNum == 0)
+            {
+                result.setCode("4");
+                result.setMsg("未存入");
+                return result;
+            }
+            else {
                 result.setCode("3");
                 result.setMsg("全部存入");
             }

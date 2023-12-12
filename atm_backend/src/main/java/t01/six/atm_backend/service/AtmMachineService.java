@@ -8,4 +8,5 @@ public interface AtmMachineService {
     public Result<?> adminAddRMB(Integer addCount,String atmId);
     public Result<?> adminTakeRMB(Integer takeCount,String atmId);
     public Result<?> adminAddPaper(Integer addPaperCount,String atmId);
+    public Result<?> printRecudePaper(String atmId);
 }

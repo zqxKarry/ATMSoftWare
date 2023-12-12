@@ -50,5 +50,11 @@ public class AtmMachineController {
     {
         return atmMachineService.adminAddPaper(addCount, atmId);
     }
+
+    @PostMapping("/reducepaper")
+    public Result<?> printReducePaper(@RequestParam(defaultValue = "") String atmId)
+    {
+        return atmMachineService.printRecudePaper(atmId);
+    }
     
 }

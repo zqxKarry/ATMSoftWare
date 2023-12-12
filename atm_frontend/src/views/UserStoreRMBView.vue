@@ -1,10 +1,18 @@
 <template>
     <div class="container">
+      <div class="numberboard">
+        <KeyPad></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
+      <div class="countdown-container" style="margin-left: -1160px;">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
+        </div>
+      </div>
         <div>
           <el-button class="butt" style="top: 850px;" @click="navigateToUserOperation">
-            <label class="fontStyle"><i class="el-icon-back"></i>返回上级</label>
+            <label class="fontStyle"><i class="el-icon-back"></i>返回</label>
           </el-button>
         </div>
         <div class="board1">
@@ -14,8 +22,8 @@
           </div>
           <div style="display:flex;margin-top: 250px;">
             <div class="input-container">
-             <div><label style = "font-size: 40px;color:rgb(196, 213, 255);">真钞</label><input v-model = "reallyNum" type="number" class="number-input" placeholder="0"></div>
-             <div><label style = "font-size: 40px;color:rgb(196, 213, 255);">假钞</label><input v-model = "fakeNum" type="number" class="number-input" placeholder="0"></div>
+             <div><label style = "font-size: 40px;color:rgb(196, 213, 255);">真钞</label><input v-model = "reallyNum" type="number" class="number-input" placeholder="0" min ="0" max="100"></div>
+             <div><label style = "font-size: 40px;color:rgb(196, 213, 255);">假钞</label><input v-model = "fakeNum" type="number" class="number-input" placeholder="0"  min ="0" max="100"></div>
            </div>
            <div style="display: flex;justify-content: center;align-items: center;">
             <el-button style="font-size: large;width: 140px;height: 60px;font-size: 40px;" @click="finished">放入</el-button>
@@ -23,11 +31,9 @@
           </div>
         </div>
       </div>
-      <el-dialog
-        title="正在验钞请等待..."
-        :visible="countMoneyDialog"
-        width="50%">
-        <span>
+      <div v-if="countMoneyDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 500px;">
+          <span class="dialog-title">正在点钞</span>
           <div style="height: 400px;">
             <i class="el-icon-loading" style="font-size: 50px;"></i>
             <!-- 对话框内容 -->
@@ -38,10 +44,10 @@
               <div style="width:30%"></div>
             </div>
           </div>
-        </span>
-      </el-dialog>
-      <div>
-        <el-dialog :visible="countFinishDialog" title="点钞结束已经存入" :append-to-body="true" class="custom-dialog">
+      </div>
+      </div>
+      <div v-if="countFinishDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 500px;">
           <!-- 对话框内容 -->
           <span class="money-case">
             共<span class="special"> {{ this.sumNum }}  </span>张,<span class="special"> {{ this.reallyNum }} </span>张识别成功<br>
@@ -50,31 +56,37 @@
             剩余<span class="special"> {{ this.restNum }}  </span>张100元人民币可识别但未存入<br>
             <span  v-show = "haveFakeMoney"><span class="special"> {{ this.fakeNum }} </span>张不可识别,请取出</span><br>
           </span><br>
-        </el-dialog>
+        </div>
       </div>
-      <div>
-        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.messageContent }}<br>
-        </span><br>
-        <!-- 机会提示区域 -->
-        <div v-if="oneORtwo" style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
-      </el-dialog>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}<br>
+          </div>
+        </div>
       </div>
     </div>
 </template>
 <script>
 import atmheader from '../components/atmHeader.vue'
+import KeyPad from '@/components/KeyPad.vue'
 import countmoney from '../components/countMoney.vue'
 import request from '@/utils/request'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
+
 export default {
   components: {
     atmheader,
-    countmoney
+    countmoney,
+    KeyPad
   },
   data () {
     return {
-      reallyNum: 0, // 真钞数量
+      countdownTime: 60,
+      timer: null,
+      reallyNum: 1, // 真钞数量
       fakeNum: 0, // 假钞数量
       sumNum: 0, // 放入总数量
       restNum: 0, // 箱内剩余的(包括无法识别的以及超过额度剩下的)
@@ -88,9 +100,35 @@ export default {
       haveFakeMoney: false
     }
   },
+  mounted () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
+    this.reallyNum = 1 // 真钞数量
+    this.fakeNum = 0 // 假钞数量
+  },
   methods: {
-    navigateToDeckTop () {
-      this.$router.push('/')
+    navigateToDeskTopAndReturnCard () {
+      // 执行页面跳转逻辑
+      // 执行退卡动画
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     navigateToUserOperation () {
       this.$router.push('/useroperation')
@@ -105,37 +143,42 @@ export default {
       })
     },
     async finished () {
-      await this.beginCountMoney()
-      if (this.isEmptyOROver() === 1) {
-        this.messageContent = '您未放入钱币,如要存款,请将钱币放入存款槽'
+      const result = this.isEmptyOROver()
+      if (result === 1) {
+        this.messageContent = '您未放入钱币or数字非法,两个数字输入框都需要填写'
         this.messageDialog = true
         setTimeout(() => {
           this.messageDialog = false
         }, 2000)
-      } else if (this.isEmptyOROver() === 2) {
-        this.messageContent = '单次限存100张,请您重新放钞'
-        this.messageDialog = true
-        setTimeout(() => {
-          this.messageDialog = false
-        }, 2000)
+      } else if (result === 2) {
+        this.beginCountMoney(1).then(() => {
+          this.messageContent = '单次限存100张,请您重新放钞'
+          this.messageDialog = true
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 2000)
+        })
       } else {
         // 去存钱
-        if (this.fakeNum > 0) {
-          this.haveFakeMoney = true
-        } else {
-          this.haveFakeMoney = false
-        }
-        this.storeRMB()
+        this.beginCountMoney(0).then(() => {
+          if (this.fakeNum > 0) {
+            this.haveFakeMoney = true
+          } else {
+            this.haveFakeMoney = false
+          }
+          this.storeRMB()
+        })
       }
     },
-    beginCountMoney () {
-      return new Promise((resolve, reject) => {
+    beginCountMoney (num) {
+      return new Promise((resolve) => {
         this.countMoneyDialog = true
         this.sumNum = parseInt(this.reallyNum) + parseInt(this.fakeNum)
-        this.countMoneyTime = this.sumNum / 10 * 1000
+        if (num === 0) this.countMoneyTime = this.sumNum / 10 * 1000
+        else this.countMoneyTime = 10000
         setTimeout(() => {
           this.countMoneyDialog = false
-          resolve() // 表示异步操作完成
+          resolve()
         }, this.countMoneyTime)
       })
     },
@@ -151,7 +194,7 @@ export default {
           setTimeout(() => {
             this.messageDialog = false
             this.navigateToDeckTop()
-          }, 5000)
+          }, 3000)
         } else if (res.code === '2') {
           // 机箱余量不足 吞入一部分钱或者一分钱不存
           this.isAtmBoxFull = true
@@ -162,7 +205,7 @@ export default {
             this.countFinishDialog = true
             setTimeout(() => {
               this.countFinishDialog = false
-            }, 5000)
+            }, 10000)
           } else {
             this.storeNum = res.data.amount / 100
             this.restNum = this.reallyNum - this.storeNum
@@ -170,8 +213,16 @@ export default {
             setTimeout(() => {
               this.countFinishDialog = false
               this.navigateToUserStoreSuccess(res.data.recordId)
-            }, 5000)
+            }, 10000)
           }
+        } else if (res.code === '4') {
+          // 一分钱没存
+          this.storeNum = 0
+          this.restNum = this.reallyNum - this.storeNum
+          this.countFinishDialog = true
+          setTimeout(() => {
+            this.countFinishDialog = false
+          }, 10000)
         } else {
           this.isAtmBoxFull = false
           this.storeNum = res.data.amount / 100
@@ -185,14 +236,45 @@ export default {
       })
     },
     isEmptyOROver () {
-      if (this.reallyNum === 0 && this.fakeNum === 0) {
+      const regex = /^[0-9]+$/ // 正则表达式，匹配大于等于0的整数
+      if (!regex.test(this.reallyNum) || !regex.test(this.fakeNum) || parseInt(this.reallyNum) + parseInt(this.fakeNum) === 0) {
         return 1
-      } else if (this.sumNum > 100) {
+      } else if (parseInt(this.reallyNum) + parseInt(this.fakeNum) > 100) {
         return 2
       } else {
+        this.reallyNum = parseInt(this.reallyNum)
+        this.fakeNum = parseInt(this.fakeNum)
         return 3
       }
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
@@ -207,7 +289,7 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
 }
 

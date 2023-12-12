@@ -1,14 +1,17 @@
 <template>
     <div class="container">
+      <div class="numberboard">
+       <KeyPad></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
       </div>
        <label class="input-name" style="font-size: 55px;">请输入拿走的数量</label>
         <input class="input-text" v-model="takeCount" type="number" readonly>
         <div class="passBack">
-          <Keypad @key-click="handleKeyClick"></Keypad>
+          <AdminKeyPad @key-click="handleKeyClick"></AdminKeyPad>
         </div>
         <div>
           <el-button class="butt" style="top: 850px;" @click="navigateToDeskTop">
@@ -20,33 +23,34 @@
         </div>
       </div>
       <div>
-      <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.message }}</span>
-        <!-- 对话框底部按钮 -->
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="messageDialog = false" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
-        </span>
-      </el-dialog>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.message }}</div>
+        </div>
+      </div>
       </div>
     </div>
 </template>
 <script>
 import request from '@/utils/request'
 import atmheader from '../components/atmHeader.vue'
-import Keypad from '../components/KeyPad.vue'
+import KeyPad from '../components/KeyPad.vue'
+import AdminKeyPad from '../components/AdminKeyPad.vue'
+import '@/assets/CSS/messageDialog.css'
 
 export default {
   components: {
     atmheader,
-    Keypad
+    KeyPad,
+    AdminKeyPad
   },
   data () {
     return {
       messageDialog: false,
       takeCount: '',
       message: '',
-      isDisButt: false,
       isShow: false
     }
   },
@@ -62,11 +66,22 @@ export default {
       if (key === '退格') {
         this.takeCount = this.takeCount.slice(0, -1)
       } else if (key === '确认') {
-        this.isShow = true
-        setTimeout(() => {
-          this.takeRMBCount(this.takeCount, this.$store.state.atmId)
-        }, 2000)
-        // 执行确认操作
+        if (this.takeCount === '' || Number(this.takeCount) === 0) {
+          this.message = '取走数量不能为0'
+          this.messageDialog = true
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 3000)
+        } else {
+          this.isShow = true
+          setTimeout(() => {
+            this.takeRMBCount(this.takeCount, this.$store.state.atmId)
+          }, 2000)
+        }
+      } else if (key === '重置') {
+        this.takeCount = ''
+      } else if (key === '#' || key === '%' || key === 'D') {
+        this.takeCount += ''
       } else {
         this.takeCount += key
       }
@@ -80,17 +95,22 @@ export default {
           this.messageDialog = true
           this.isDisButt = false
           this.takeCount = ''
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 3000)
         } else if (res.code === '1') {
           this.message = res.msg
           this.messageDialog = true
-          this.isDisButt = true
           setTimeout(() => {
+            this.messageDialog = false
             this.navigateToDeskTop()
           }, 3000)
         } else {
           this.message = res.msg
           this.messageDialog = true
-          this.isDisButt = false
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 3000)
         }
       })
     }
@@ -108,7 +128,7 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
 }
 
@@ -187,22 +207,4 @@ export default {
     text-shadow: 2px 2px 4px rgba(3, 75, 21, 0.5);
 }
 
-.custom-dialog .el-dialog__header {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__body {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__footer {
-  background-color: rgb(172, 140, 140);
-  text-align: center;
-}
-.dialog-content {
-  font-size: 72px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: rgb(224, 32, 32);
-  text-align: center;
-}
 </style>

@@ -1,35 +1,39 @@
 
 <template>
     <div class="container">
+      <div class="numberboard">
+          <Keypad @key-click="handleKeyClick"></Keypad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
       </div>
-        <label class="input-name">请输入密码</label>
-        <input class="input-text" v-model="cardPass" type="password" readonly>
-        <div>
-          <el-button class="butt" style="top: 850px" @click="navigateToAdminOperation">
-            <label class="fontStyle"><i class="el-icon-back"></i>退出</label>
-          </el-button>
-        </div>
-        <div class="passBack">
-          <Keypad @key-click="handleKeyClick"></Keypad>
+      <div class="countdown-container">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
         </div>
       </div>
-      <div>
-        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.messageContent }}<br>
-          <span class="dialog-content" v-if = "oneORtwo">超过3次输入错误密码本账户将锁定！</span>
-        </span><br>
-        <!-- 机会提示区域 -->
-        <div v-if="oneORtwo" style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
-        <!-- 对话框底部按钮 -->
-        <span slot="footer" class="dialog-footer">
-          <el-button :disabled = "isDisButt" @click="closeDialog" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
-        </span>
-      </el-dialog>
+        <label class="input-name1" style="left:650px;top:300px">请输入密码</label>
+        <input class="input-text1" style="left:500px;top:400px" v-model="cardPass" type="password" readonly>
+        <div>
+          <el-button class="butt" style="top: 850px" @click="navigateToDeskTopAndReturnCard">
+            <label class="fontStyle"><i class="el-icon-back"></i>退卡</label>
+          </el-button>
+        </div>
+      </div>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}<br>
+            <span v-if="oneORtwo" class="dialog-hint">超过3次输入错误密码本账户将锁定！</span>
+          </div>
+          <!-- 机会提示区域 -->
+          <div v-if="oneORtwo" class="dialog-chance">
+              你还有{{ this.num }}次机会
+          </div>
+        </div>
       </div>
     </div>
 </template>
@@ -37,6 +41,8 @@
 import request from '@/utils/request'
 import Keypad from '../components/KeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
 
 export default {
   components: {
@@ -45,6 +51,8 @@ export default {
   },
   data () {
     return {
+      countdownTime: 60,
+      timer: null,
       cardPass: '',
       messageDialog: false,
       messageContent: '',
@@ -55,6 +63,11 @@ export default {
     }
   },
   mounted () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
     this.whenRefresh()
   },
   methods: {
@@ -71,9 +84,25 @@ export default {
       // 执行页面跳转逻辑
       this.$router.push('/useroperation')
     },
-    navigateToDeskTop () {
+    navigateToDeskTopAndReturnCard () {
       // 执行页面跳转逻辑
-      this.$router.push('/')
+      // 执行退卡动画
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     handleKeyClick (key) {
       if (key === '退格') {
@@ -88,10 +117,6 @@ export default {
         this.cardPass += key
       }
     },
-    closeDialog () {
-      this.messageDialog = false
-      this.cardPass = ''
-    },
     checkCardPass (cardPass) {
       const cardId = this.$route.params.cardId
       const url = '/card/check-pass?cardid=' + cardId + '&cardpassword=' + cardPass
@@ -105,9 +130,9 @@ export default {
           this.messageContent = res.msg
           this.messageDialog = true
           setTimeout(() => {
-            this.navigateToDeskTop()
+            this.navigateToDeskTopAndReturnCard()
             // （如果系统错误）加退卡操作
-          }, 2000)
+          }, 3000)
         } else {
           this.num = res.data.num
           if (this.num <= 0) {
@@ -123,10 +148,42 @@ export default {
             this.oneORtwo = true
             this.messageContent = '银行卡对应密码错误，请重试！'
             this.messageDialog = true
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
           }
         }
       })
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
@@ -141,16 +198,16 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left; /* 水平居中 */
     align-items: center; /* 垂直居中 */
 }
 
-.passBack {
-    /* 输入密码盘背景 */
+.numberboard {
+    /* 输入盘背景 */
     position: absolute;
     width: 628px;
     height: 780px;
-    left: 759px;
+    left: 1600px;
     top: 194px;
     background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
     opacity: 0.54;
@@ -162,37 +219,33 @@ export default {
     align-items: center; /* 垂直居中 */
 }
 
-.input-name {
-    /* 请输入员工号： */
+.input-name1 {
+    /* label： */
     position: absolute;
-    width: 486px;
-    height: 87px;
-    left: 159px;
-    right: 849px;
-    top: 300px;
+    width: 800px;
+    left: 440px;
+    top: 180px;
     bottom: 801px;
-    color: rgb(72, 161, 87);
+    color: rgb(8, 20, 21);
     font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-    font-size: 72px;
+    font-size: 35px;
     font-weight: 400;
     line-height: 86px;
     letter-spacing: 0px;
     text-align: left;
-    text-shadow: 2px 2px 4px rgba(212, 52, 116, 0.5);
+    text-shadow: 2px 2px 4px rgba(0, 49, 182, 0.5);
 }
-.input-text {
+.input-text1 {
     /* 密码框 */
     position: absolute;
     width: 465px;
-    height: 97px;
-    left: 150px;
-    right: 821px;
-    top: 450px;
-    bottom: 487px;
+    height: 60px;
+    left: 450px;
+    top: 300px;
     background: rgb(195, 170, 170);
     border-radius: 20px;
     text-align: center;
-    font-size: 50px;
+    font-size: 45px;
 }
 
 /* 两个按钮 */
@@ -220,22 +273,4 @@ export default {
     text-shadow: 2px 2px 4px rgba(3, 75, 21, 0.5);
 }
 
-.custom-dialog .el-dialog__header {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__body {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__footer {
-  background-color: rgb(172, 140, 140);
-  text-align: center;
-}
-.dialog-content {
-  font-size: 72px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: rgb(224, 32, 32);
-  text-align: center;
-}
 </style>

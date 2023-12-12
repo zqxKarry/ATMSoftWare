@@ -101,5 +101,20 @@ public class AtmMachineServiceImpl extends ServiceImpl<AtmMachineMapper,AtmMachi
             } 
         }
     }
+
+    @Override
+    public Result<?> printRecudePaper(String atmId) {
+        AtmMachine atm = atmMachineMapper.selectById(atmId);
+        if(atm==null){
+            return Result.error("1","网络不稳定或机器出现故障,请稍后重试或者进行维修");
+        }
+        else{
+            // 打印用掉纸张
+            Integer orginCount = atm.getAtmPaperCount() - 1;
+            atm.setAtmPaperCount(orginCount);
+            atmMachineMapper.updateById(atm);
+            return Result.success(atm);
+        } 
+    }
     
 }

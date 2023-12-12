@@ -1,9 +1,11 @@
-
 <template>
     <div class="container">
+      <div class="numberboard">
+       <KeyPad ></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
       </div>
         <label class="input-name">请输入员工号</label>
@@ -14,33 +16,33 @@
           </el-button>
         </div>
         <div class="passBack">
-          <Keypad @key-click="handleKeyClick"></Keypad>
+          <AdminKeyPad @key-click="handleKeyClick"></AdminKeyPad>
         </div>
       </div>
-      <div>
-      <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
+      <div v-if="messageDialog" class = "dialog-overlay">
+      <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
         <!-- 对话框内容 -->
+        <span class="dialog-title">重要提示</span><br>
         <span class="dialog-content">{{ this.messageContent }}<br>
-          <span class="dialog-content" v-if="oneORtwo">超过3次输入错误密码将自动报警</span>
-          <span class="dialog-content" v-else>请重新尝试！如不行请联系检修员</span>
+          <span class="dialog-content" v-if="oneORtwo">超过3次输入错误账号错误将自动报警</span>
         </span><br>
         <div v-if="oneORtwo" style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
-        <!-- 对话框底部按钮 -->
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="closeDialog" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
-        </span>
-      </el-dialog>
-      </div>
+       </div>
+       </div>
     </div>
 </template>
 <script>
 import request from '@/utils/request'
-import Keypad from '../components/KeyPad.vue'
+import AdminKeyPad from '../components/AdminKeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
+import KeyPad from '@/components/KeyPad.vue'
+import '@/assets/CSS/messageDialog.css'
+
 export default {
   components: {
-    Keypad,
-    atmheader
+    AdminKeyPad,
+    atmheader,
+    KeyPad
   },
   data () {
     return {
@@ -81,10 +83,21 @@ export default {
       if (key === '退格') {
         this.adminId = this.adminId.slice(0, -1)
       } else if (key === '确认') {
-        this.isShow = true
-        setTimeout(() => {
-          this.checkAdminId(this.adminId, this.$store.state.atmId)
-        }, 2000)
+        if (this.adminId === '') {
+          this.messageContent = '员工号不能空白'
+          this.oneORtwo = false
+          this.messageDialog = true
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 2000)
+        } else {
+          this.isShow = true
+          setTimeout(() => {
+            this.checkAdminId(this.adminId, this.$store.state.atmId)
+          }, 2000)
+        }
+      } else if (key === '重置') {
+        this.adminId = ''
       } else {
         this.adminId += key
       }
@@ -95,7 +108,7 @@ export default {
       this.adminId = ''
     },
     checkAdminId (adminId, atmId) {
-      if (this.num > 1) {
+      if (this.num >= 1) {
         const url = '/admin/check-id?adminId=' + adminId + '&' + 'atmId=' + atmId
         request.get(url).then(res => {
           /* 对结果进行判断 */
@@ -109,14 +122,23 @@ export default {
               this.messageContent = '员工号错误！请重新输入!\n'
               this.num--
               this.messageDialog = true
+              setTimeout(() => {
+                this.messageDialog = false
+              }, 3000)
             } else if (res.code === '2') {
               this.oneORtwo = false
-              this.messageContent = '请求超时，未连接到服务器！\n'
+              this.messageContent = '该员工号对本终端无管理权限！\n'
               this.messageDialog = true
+              setTimeout(() => {
+                this.messageDialog = false
+              }, 3000)
             } else {
               this.oneORtwo = false
-              this.messageContent = '密码错误3次,已锁定，请前往柜台解锁！\n'
+              this.messageContent = '账户存在,但之前尝试登录密码错误3次,已锁定,请前往柜台解锁！\n'
               this.messageDialog = true
+              setTimeout(() => {
+                this.messageDialog = false
+              }, 3000)
             }
           }
         })
@@ -134,16 +156,16 @@ export default {
 </script>
 <style>
 .desktopBack {
-      position: relative;
-      width: 1440px;
-      height: 1024px;
-      background: linear-gradient(118.86deg, rgb(14, 20, 112) 21.912%,rgba(23, 21, 15, 0) 98.654%);
-      border: 10px solid rgb(0, 0, 0);
-      border-radius: 20px;
+    position: relative;
+    width: 1440px;
+    height: 1024px;
+    background: linear-gradient(118.86deg, rgb(14, 20, 112) 21.912%,rgba(23, 21, 15, 0) 98.654%);
+    border: 10px solid rgb(0, 0, 0);
+    border-radius: 20px;
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
 }
 
@@ -222,22 +244,4 @@ export default {
     text-shadow: 2px 2px 4px rgba(3, 75, 21, 0.5);
 }
 
-.custom-dialog .el-dialog__header {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__body {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__footer {
-  background-color: rgb(172, 140, 140);
-  text-align: center;
-}
-.dialog-content {
-  font-size: 72px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: rgb(224, 32, 32);
-  text-align: center;
-}
 </style>

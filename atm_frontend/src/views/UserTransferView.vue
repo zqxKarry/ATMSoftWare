@@ -5,8 +5,13 @@
       </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
+      </div>
+      <div class="countdown-container">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
+        </div>
       </div>
       <label v-show = "isAmount" class="input-name2" style = "width: 600px;left: 540px;top: 320px;">请输入转账金额</label>
       <input class="input-text2" style = "height: 60px;left: 470px;top: 430px;" v-model="str"  readonly>
@@ -17,7 +22,7 @@
           <el-button v-show = "isButt" class="butt" style="top: 650px; margin-left:0px;" @click="refreshAmount">
             <label class="fontStyle"><i class="el-icon-back"></i>重置金额</label>
           </el-button>
-          <el-button class="butt" style="top: 850px; margin-left:0px;" @click="navigateToDeskTop">
+          <el-button class="butt" style="top: 850px; margin-left:0px;" @click="navigateToDeskTopAndReturnCard">
             <label class="fontStyle"><i class="el-icon-back"></i>退卡</label>
           </el-button>
           <el-button class="butt" style="top: 650px; margin-left:1130px;" @click="navigateToUserCheckBalance">
@@ -28,12 +33,13 @@
           </el-button>
         </div>
       </div>
-      <div>
-        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.messageContent }}<br>
-        </span>
-      </el-dialog>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div  class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}<br>
+          </div>
+        </div>
       </div>
     </div>
 </template>
@@ -41,6 +47,9 @@
 import atmheader from '../components/atmHeader.vue'
 import Keypad from '@/components/KeyPad.vue'
 import request from '@/utils/request'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
+
 export default {
   components: {
     atmheader,
@@ -48,6 +57,8 @@ export default {
   },
   data () {
     return {
+      countdownTime: 60,
+      timer: null,
       str: '', // 转账金额与对方账户的传递者
       counter: 0, // 实现转账金额与对方账户值的切换
       amount: '', // 转账金额
@@ -61,13 +72,35 @@ export default {
     }
   },
   mounted () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
     this.isAmount = true
     this.isCardId = false
     this.isButt = false
   },
   methods: {
-    navigateToDeskTop () {
-      this.$router.push('/')
+    navigateToDeskTopAndReturnCard () {
+      // 执行页面跳转逻辑
+      // 执行退卡动画
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     navigateToUserConfirmInfo (amount, cardid2) {
       this.$router.push({
@@ -181,22 +214,50 @@ export default {
           }, 3000)
         }
       })
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
 <style>
 .desktopBack {
-      position: relative;
-      width: 1440px;
-      height: 1024px;
-      background: linear-gradient(118.86deg, rgb(14, 20, 112) 21.912%,rgba(23, 21, 15, 0) 98.654%);
-      border: 10px solid rgb(0, 0, 0);
-      border-radius: 20px;
+  position: relative;
+  width: 1440px;
+  height: 1024px;
+  background: linear-gradient(118.86deg, rgb(14, 20, 112) 21.912%,rgba(23, 21, 15, 0) 98.654%);
+  border: 10px solid rgb(0, 0, 0);
+  border-radius: 20px;
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left; /* 水平居中 */
     align-items: center; /* 垂直居中 */
 }
 
@@ -291,7 +352,7 @@ export default {
     position: absolute;
     width: 628px;
     height: 780px;
-    left: 2000px;
+    left: 1600px;
     top: 194px;
     background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
     opacity: 0.54;

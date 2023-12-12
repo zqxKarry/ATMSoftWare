@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+    <div class="numberboard">
+       <Keypad></Keypad>
+    </div>
     <div class="desktopBack">
       <atmheader></atmheader>
       <el-button class="MangerEnterButt" style="top:850px" @click="navigateToAdminCheckId">
@@ -11,11 +14,9 @@
       <div class="cardArea" @click="insertCard">
         <card @key-click="handleCardClick"></card>
       </div>
-      <el-dialog
-        title="正在读卡请稍后..."
-        :visible="readingCardDialog"
-        width="50%"
-        :before-close="handleClose">
+      <div v-if="readingCardDialog" class = "dialog-overlay">
+      <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 500px;">
+        <span class="dialog-title">正在读卡....</span>
         <span>
           <div style="height: 400px;">
             <i class="el-icon-loading" style="font-size: 50px;"></i>
@@ -27,13 +28,13 @@
             </div>
           </div>
         </span>
-      </el-dialog>
-      <el-dialog
-        title="正在退卡请等待..."
-        :visible="returnCardDialog"
-        width="50%">
+      </div>
+      </div>
+      <div v-if="returnCardDialog" class = "dialog-overlay">
+      <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 500px;">
+        <span class="dialog-title">正在退卡....</span>
         <span>
-          <span style="font-size:20px">{{ this.message }},请收好</span>
+          <span style="font-size:20px">{{ this.message }} 请收好</span>
           <div style="height: 400px;">
             <i class="el-icon-loading" style="font-size: 50px;"></i>
             <!-- 对话框内容 -->
@@ -45,18 +46,16 @@
             </div>
           </div>
         </span>
-      </el-dialog>
-      <div>
-      <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.message }}</span>
-        <!-- 对话框底部按钮 -->
-        <span slot="footer" class="dialog-footer">
-          <!-- <el-button @click="messageDialog = false" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button> -->
-        </span>
-      </el-dialog>
+      </div>
+      </div>
     </div>
-    </div>
+    <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}</div>
+        </div>
+      </div>
   </div>
 </template>
 <script>
@@ -64,21 +63,38 @@ import card from '../components/card.vue'
 import atmheader from '../components/atmHeader.vue'
 import readcard from '../components/ReadCard.vue'
 import returncard from '../components/ReturnCard.vue'
+import Keypad from '../components/KeyPad.vue'
 import request from '@/utils/request'
+import '@/assets/CSS/messageDialog.css'
+
 export default {
   components: {
     card,
     atmheader,
     readcard,
-    returncard
+    returncard,
+    Keypad
   },
   data () {
     return {
       returnCardDialog: false,
       readingCardDialog: false,
       cardid: '',
-      message: '',
+      messageContent: '',
       messageDialog: false
+    }
+  },
+  created () {
+    const triggerMethod = this.$route.params.triggerMethod
+    const eatCard = this.$route.params.eatCard
+    if (triggerMethod) {
+      this.returnCard() // 触发 returnCard 方法
+    } else if (eatCard) {
+      this.messageContent = '卡已被吞,请联系管理员取出'
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 2000)
     }
   },
   methods: {
@@ -87,12 +103,22 @@ export default {
       this.$router.push('/admincheckid')
     },
     insertCard () {
-      /* 点击银行卡进行读卡 */
-      this.readingCardDialog = true
-      this.startInsertionAnimation()
-      setTimeout(() => {
-        this.checkCardId(this.cardid)
-      }, 4000)
+      /* 判断卡号是否合法 */
+      if (this.validateCardNumber(this.cardid) === true) {
+        /* 点击银行卡进行读卡 */
+        this.readingCardDialog = true
+        this.startInsertionAnimation()
+        setTimeout(() => {
+          this.checkCardId(this.cardid)
+        }, 4000)
+      } else {
+        this.messageContent = '银行卡号非法,请输入十六位数字银行卡号'
+        this.messageDialog = true
+        setTimeout(() => {
+          this.cardid = ''
+          this.messageDialog = false
+        }, 2000)
+      }
     },
     startInsertionAnimation () {
       this.$nextTick(() => {
@@ -138,6 +164,15 @@ export default {
           cardId: cardId
         }
       })
+    },
+    validateCardNumber () {
+      const regex = /^\d{16}$/
+      const isValid = regex.test(this.cardid)
+      if (!isValid) {
+        return false
+      } else {
+        return true
+      }
     }
   }
 }
@@ -153,7 +188,7 @@ export default {
 }
 .container {
   display: flex;
-  justify-content: center; /* 水平居中 */
+  justify-content: left; /* 水平居左 */
   align-items: center; /* 垂直居中 */
 }
 .MangerEnterButt {
@@ -181,24 +216,21 @@ export default {
     text-shadow: 2px 2px 4px rgba(3, 75, 21, 0.5);
 }
 
-.welcome {
-  /* 欢迎使用吉大T1银行！ */
-  position: absolute;
-  width: 938px;
-  height: 160px;
-  left: 25px;
-  right: 477px;
-  top: 119px;
-  bottom: 745px;
-  color: rgb(72, 161, 87);
-  font-family: 黑体;
-  font-size: 72px;
-  font-weight: 400;
-  line-height: 86px;
-  letter-spacing: 0px;
-  text-align: left;
-  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-  text-shadow: 2px 2px 4px rgba(2, 26, 8, 0.5);
+.numberboard {
+    /* 输入盘背景 */
+    position: absolute;
+    width: 628px;
+    height: 780px;
+    left: 1600px;
+    top: 194px;
+    background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
+    opacity: 0.54;
+    border-radius: 20px;
+    border: 6px solid #c0c0c0;
+    border-style: rgb(31, 32, 51);
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
 }
 
 .card-slot0 {
@@ -230,44 +262,6 @@ export default {
   /* 旋转 */
   transform: rotate(90deg);
   transform-origin: left top;
-}
-
-/* .reading-card-diolog {
-  border: 2px solid red;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  width: 50%;
-  height: 200px;
-  z-index: 9999;
-} */
-
-/* .return-card-dialog {
-  border: 2px solid red;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  width: 50%;
-  height: 200px;
-  z-index: 9999;
-} */
-
-.custom-dialog .el-dialog__header {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__body {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__footer {
-  background-color: rgb(172, 140, 140);
-  text-align: center;
-}
-
-.dialog-content {
-  font-size: 72px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: rgb(224, 32, 32);
-  text-align: center;
 }
 
 </style>

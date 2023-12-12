@@ -1,9 +1,17 @@
 <template>
     <div class="container">
+    <div class="numberboard">
+       <KeyPad></KeyPad>
+    </div>
       <div class="desktopBack">
       <atmheader></atmheader>
+      <div class="countdown-container">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
+        </div>
+      </div>
         <div>
-          <el-button class="butt" style="top: 850px;" @click="navigateToDeskTop">
+          <el-button class="butt" style="top: 850px;" @click="navigateToDeskTopAndReturnCard">
             <label class="fontStyle"><i class="el-icon-back"></i>退卡</label>
           </el-button>
           <el-button class="butt" style="top: 850px; margin-left:1130px;" @click="navigateToOperation">
@@ -15,18 +23,32 @@
         <label class="balaFontStyle" v-show="isShow">您的余额共计:<span class="special"> {{ this.balance }} </span>元</label><br>
         <label class="balaFontStyle" v-show="notShow">机器出现故障或者网络不稳定,请稍后再试</label>
       </div>
+      <div v-if="messageDialog" class = "dialog-overlay">
+      <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}<br>
+          </div>
+        </div>
+      </div>
     </div>
 </template>
 <script>
 import request from '@/utils/request'
+import KeyPad from '@/components/KeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
 
 export default {
   components: {
-    atmheader
+    atmheader,
+    KeyPad
   },
   data () {
     return {
+      countdownTime: 60,
+      timer: null,
       messageDialog: false,
       balance: 0,
       isShow: true,
@@ -34,13 +56,33 @@ export default {
     }
   },
   created () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
     this.checkBalance()
   },
   methods: {
-    navigateToDeskTop () {
+    navigateToDeskTopAndReturnCard () {
       // 执行页面跳转逻辑
       // 执行退卡动画
-      this.$router.push('/')
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     navigateToOperation () {
       this.$router.push('/useroperation')
@@ -63,7 +105,35 @@ export default {
           }, 3000)
         }
       })
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
@@ -78,58 +148,8 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
-}
-
-.passBack {
-    /* 输入密码盘背景 */
-    position: absolute;
-    width: 628px;
-    height: 780px;
-    left: 759px;
-    top: 194px;
-    background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
-    opacity: 0.54;
-    border-radius: 20px;
-    border: 6px solid #c0c0c0;
-    border-style: rgb(31, 32, 51);
-    display: flex;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
-}
-
-.input-name {
-    /* 请输入员工号： */
-    position: absolute;
-    width: 486px;
-    height: 87px;
-    left: 159px;
-    right: 849px;
-    top: 300px;
-    bottom: 801px;
-    color: rgb(72, 161, 87);
-    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-    font-size: 72px;
-    font-weight: 400;
-    line-height: 86px;
-    letter-spacing: 0px;
-    text-align: left;
-    text-shadow: 2px 2px 4px rgba(212, 52, 116, 0.5);
-}
-.input-text {
-    /* 密码框 */
-    position: absolute;
-    width: 465px;
-    height: 97px;
-    left: 150px;
-    right: 821px;
-    top: 450px;
-    bottom: 487px;
-    background: rgb(195, 170, 170);
-    border-radius: 20px;
-    text-align: center;
-    font-size: 50px;
 }
 
 /* 两个按钮 */
@@ -160,8 +180,8 @@ export default {
   position: absolute;
   width: 937px;
   height: 455px;
-  margin-left: 100px;
-  margin-right: 138px;
+  margin-left: 250px;
+  /* margin-right: 138px; */
   margin-top: 50px;
   background: rgb(172, 140, 140);
   border-radius: 20px;

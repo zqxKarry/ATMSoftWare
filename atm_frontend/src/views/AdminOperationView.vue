@@ -1,6 +1,9 @@
 
 <template>
     <div class="container">
+      <div class="numberboard">
+       <KeyPad></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
         <div>
@@ -43,9 +46,11 @@
 </template>
 <script>
 import atmheader from '../components/atmHeader.vue'
+import KeyPad from '@/components/KeyPad.vue'
 export default {
   components: {
-    atmheader
+    atmheader,
+    KeyPad
   },
   data () {
     return {
@@ -83,7 +88,7 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
 }
 

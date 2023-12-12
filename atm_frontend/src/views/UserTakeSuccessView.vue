@@ -1,12 +1,20 @@
 <template>
     <div class="container">
+      <div class="numberboard">
+        <KeyPad></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
       </div>
+      <div class="countdown-container">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
+        </div>
+      </div>
         <div>
-          <el-button class="butt" style="top: 850px;" @click="navigateToDeskTop">
+          <el-button class="butt" style="top: 850px;" @click="navigateToDeskTopAndReturnCard">
             <label class="fontStyle"><i class="el-icon-back"></i>退卡</label>
           </el-button>
           <el-button class="butt" style="top: 650px;margin-left:0px;" @click="navigateToUserOperation">
@@ -28,27 +36,34 @@
             共计<span class="special"> {{ this.price }} </span>元
           </span><br>
       </div>
-      <div>
-        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.messageContent }}<br>
-        </span>
-      </el-dialog>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}<br>
+          </div>
+        </div>
       </div>
     </div>
 </template>
 <script>
 import request from '@/utils/request'
 import atmheader from '../components/atmHeader.vue'
+import KeyPad from '@/components/KeyPad.vue'
 import pdfMake from 'pdfmake/build/pdfmake'
 import pdfFonts from 'pdfmake/build/vfs_fonts'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
 
 export default {
   components: {
-    atmheader
+    atmheader,
+    KeyPad
   },
   data () {
     return {
+      countdownTime: 60,
+      timer: null,
       takeCount: 0, // 操作数量
       price: 0,
       recordId: '',
@@ -60,13 +75,34 @@ export default {
     }
   },
   mounted () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
     pdfMake.vfs = pdfFonts.pdfMake.vfs
     this.writePage()
   },
   methods: {
-    navigateToDeskTop () {
+    navigateToDeskTopAndReturnCard () {
+      // 执行页面跳转逻辑
       // 执行退卡动画
-      this.$router.push('/')
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     navigateToUserTakeRMB () {
       this.$router.push('/usertakermb')
@@ -75,6 +111,8 @@ export default {
       this.$router.push('/useroperation')
     },
     writePage () {
+      const cardInfo = JSON.parse(sessionStorage.getItem('cardInfo'))
+      this.cardId = cardInfo.cardId
       this.recordId = this.$route.params.recordid
       this.price = this.$route.params.takeAmount
       this.takeCount = this.price / 100
@@ -191,10 +229,55 @@ export default {
           }, 2000)
         } else {
           this.transactionDetails = res.data
+          this.reducePaper()
+        }
+      })
+    },
+    async reducePaper () {
+      const url = '/atm/reducepaper?atmId=' + this.$store.state.atmId
+      request.post(url).then(res => {
+        if (res.code === '1') {
+          this.isShow = false
+          this.messageContent = res.msg
+          setTimeout(() => {
+            this.messageDialog = true
+          }, 2000)
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 2000)
+        } else {
           this.generateAndPrintPDF()
         }
       })
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
@@ -209,7 +292,7 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
 }
 
@@ -241,7 +324,7 @@ export default {
   position: absolute;
   width: 700px;
   height: 455px;
-  margin-left: 100px;
+  margin-left: 370px;
   margin-right: 138px;
   margin-top: 50px;
   background: rgb(172, 140, 140);

@@ -1,0 +1,19 @@
+.countdown-container {
+    width: 200px;
+    position: relative;
+    top: 10px; /* 距离顶部的距离 */
+    left: 1200px; /* 距离右侧的距离 */
+    z-index: 9999; /* 设置层级，确保在其他元素之上 */
+}
+.countdown {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  
+  .countdown-timer {
+    margin-top: 10px;
+  }

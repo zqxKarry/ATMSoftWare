@@ -1,12 +1,17 @@
 <template>
     <div class="container">
       <div class="numberboard">
-        <Keypad @key-click="handleKeyClick"></Keypad>
+        <KeyPad @key-click="handleKeyClick"></KeyPad>
       </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
+      </div>
+      <div class="countdown-container">
+        <div class="countdown">
+         <div class="countdown-timer">倒计时:{{ this.countdownTime }} s</div>
+        </div>
       </div>
       <label class="input-name1">请选择或者输入取款金额</label>
       <input class="input-text1" v-model="takeAmount"  readonly>
@@ -30,11 +35,9 @@
           </el-button>
         </div>
       </div>
-      <el-dialog
-        title="正在点钞请等待..."
-        :visible="countMoneyDialog"
-        width="50%">
-        <span>
+      <div v-if="countMoneyDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 500px;">
+          <span class="dialog-title">正在点钞</span>
           <div style="height: 400px;">
             <i class="el-icon-loading" style="font-size: 50px;"></i>
             <!-- 对话框内容 -->
@@ -45,16 +48,15 @@
               <div style="width:30%"></div>
             </div>
           </div>
-        </span>
-      </el-dialog>
-      <div>
-        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
-        <!-- 对话框内容 -->
-        <span class="dialog-content">{{ this.messageContent }}<br>
-        </span><br>
-        <!-- 机会提示区域 -->
-        <div v-if="oneORtwo" style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
-      </el-dialog>
+      </div>
+      </div>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}" style="height: 400px;">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.messageContent }}<br>
+          </div>
+        </div>
       </div>
     </div>
 </template>
@@ -62,15 +64,20 @@
 import atmheader from '../components/atmHeader.vue'
 import countmoney from '../components/countMoney.vue'
 import request from '@/utils/request'
-import Keypad from '@/components/KeyPad.vue'
+import KeyPad from '@/components/KeyPad.vue'
+import '@/assets/CSS/messageDialog.css'
+import '@/assets/CSS/timeCounter.css'
+
 export default {
   components: {
     atmheader,
     countmoney,
-    Keypad
+    KeyPad
   },
   data () {
     return {
+      countdownTime: 60,
+      timer: null,
       takeAmount: '',
       countMoneyDialog: false,
       messageContent: '',
@@ -79,9 +86,33 @@ export default {
       isShow: false
     }
   },
+  mounted () {
+    // ===========事件监听=========//
+    this.startTimer()
+    window.addEventListener('click', this.resetTimer)
+    window.addEventListener('keydown', this.resetTimer)
+    // ============================//
+  },
   methods: {
-    navigateToDeckTop () {
-      this.$router.push('/')
+    navigateToDeskTopAndReturnCard () {
+      // 执行页面跳转逻辑
+      // 执行退卡动画
+      this.$router.push({
+        name: 'desktop',
+        params: {
+          triggerMethod: true // 条件信息，设置为 true 表示满足条件}
+        }
+      })
+    },
+    navigateToDeskTopAndEatCard () {
+      if (this.$route.name !== 'desktop') {
+        this.$router.push({
+          name: 'desktop',
+          params: {
+            eatCard: true
+          }
+        })
+      }
     },
     navigateToUserOperation () {
       this.$router.push('/useroperation')
@@ -125,7 +156,7 @@ export default {
         this.isShow = false
       }, 2000)
       if (this.isEmptyOROver() === 1) {
-        this.messageContent = '取款操作不能选择0元，系统无法执行'
+        this.messageContent = '取款操作不能选择0元,系统无法执行'
         this.messageDialog = true
         setTimeout(() => {
           this.messageDialog = false
@@ -133,6 +164,13 @@ export default {
         this.takeAmount = ''
       } else if (this.isEmptyOROver() === 2) {
         this.messageContent = '最小面额是100元人民币,请重新选择金额'
+        this.messageDialog = true
+        setTimeout(() => {
+          this.messageDialog = false
+        }, 3000)
+        this.takeAmount = ''
+      } else if (this.isEmptyOROver() === 3) {
+        this.messageContent = '单次取款限额1000元'
         this.messageDialog = true
         setTimeout(() => {
           this.messageDialog = false
@@ -160,7 +198,7 @@ export default {
       request.post(url).then(async res => {
         if (res.code === '1') {
           // 出错了 转到桌面,退卡
-          this.messageContent = '机器故障请重试或者更换机器'
+          this.messageContent = '机器故障请重试或者更换机器,即将退卡...'
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
@@ -202,10 +240,40 @@ export default {
       } else if (Number(this.takeAmount) % 100 !== 0) {
         // 不是100 的整数
         return 2
-      } else {
+      } else if (Number(this.takeAmount) > 1000) {
         return 3
+      } else {
+        return 4
       }
+    },
+    startTimer () {
+      this.timer = setInterval(() => {
+        if (this.countdownTime > 0) {
+          this.countdownTime--
+          if (this.countdownTime === 10) {
+            this.messageContent = '倒计时结束之前还未操作将会被吞卡,请执行您的操作'
+            this.messageDialog = true
+            this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+              this.cardPass = ''
+            }, 3000)
+          }
+        } else {
+          clearInterval(this.timer)
+          this.navigateToDeskTopAndEatCard()
+        }
+      }, 1000)
+    },
+    resetTimer () {
+      this.countdownTime = 60
     }
+  },
+  beforeDestroy () {
+    // 在组件销毁前移除事件监听器以及计时
+    clearInterval(this.timer)
+    window.removeEventListener('click', this.resetTimer)
+    window.removeEventListener('keydown', this.resetTimer)
   }
 }
 </script>
@@ -220,7 +288,7 @@ export default {
 }
 .container {
     display: flex;
-    justify-content: center; /* 水平居中 */
+    justify-content: left;
     align-items: center; /* 垂直居中 */
 }
 
@@ -299,31 +367,12 @@ export default {
   font-size: 40px;
 }
 
-.custom-dialog .el-dialog__header {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__body {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__footer {
-  background-color: rgb(172, 140, 140);
-  text-align: center;
-}
-.dialog-content {
-  font-size: 72px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: rgb(224, 32, 32);
-  text-align: center;
-}
-
 .numberboard {
     /* 输入金额盘背景 */
     position: absolute;
     width: 628px;
     height: 780px;
-    left: 2000px;
+    left: 1600px;
     top: 194px;
     background: linear-gradient(90.00deg, rgb(179, 139, 139),rgba(255, 255, 255, 0) 100%);
     opacity: 0.54;

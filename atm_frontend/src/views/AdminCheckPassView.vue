@@ -1,48 +1,50 @@
 
 <template>
     <div class="container">
+      <div class="numberboard">
+       <KeyPad ></KeyPad>
+      </div>
       <div class="desktopBack">
       <atmheader></atmheader>
-      <div v-show ="isShow" style="position: relative; left:0px; top:300px; z-index: 9999;">
+      <div v-show ="isShow" style="position: absolute; left:700px; top:400px; z-index: 9999;">
         <i class="el-icon-loading" style="font-size: 100px;"></i>
       </div>
         <label class="input-name">请输入密码</label>
         <input class="input-text" v-model="adminPass" type="password" readonly>
         <div>
-          <el-button class="butt" style="top: 850px" @click="navigateToAdminOperation">
+          <el-button class="butt" style="top: 850px" @click="navigateToDeskTop">
             <label class="fontStyle"><i class="el-icon-back"></i>退出</label>
           </el-button>
         </div>
         <div class="passBack">
-          <Keypad @key-click="handleKeyClick"></Keypad>
+          <AdminKeyPad @key-click="handleKeyClick"></AdminKeyPad>
         </div>
       </div>
-      <div>
-        <el-dialog :visible="messageDialog" title="重要提示" :append-to-body="true" class="custom-dialog">
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
         <!-- 对话框内容 -->
+        <span class="dialog-title">重要提示</span><br>
         <span class="dialog-content">{{ this.messageContent }}<br>
           <span class="dialog-content" v-if = "oneORtwo">超过3次输入错误密码将锁定！</span>
           <span class="dialog-content" v-else>请重新尝试！如不行请联系检修员</span>
         </span><br>
         <div v-if="oneORtwo" style="font-size: 30px;text-align: center;width:100%;box-sizing: border-box;">你还有{{ this.num }}次机会</div>
-        <!-- 对话框底部按钮 -->
-        <span slot="footer" class="dialog-footer">
-          <el-button :disabled = "isDisButt" @click="closeDialog" style="width: 20%;height: 60px;font-size: 40px;font-family: 楷体;">确 认</el-button>
-        </span>
-      </el-dialog>
+      </div>
       </div>
     </div>
 </template>
 <script>
 import request from '@/utils/request'
-import Keypad from '../components/KeyPad.vue'
+import KeyPad from '../components/KeyPad.vue'
+import AdminKeyPad from '../components/AdminKeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
 import { mapMutations } from 'vuex'
 
 export default {
   components: {
-    Keypad,
-    atmheader
+    KeyPad,
+    atmheader,
+    AdminKeyPad
   },
   data () {
     return {
@@ -81,11 +83,21 @@ export default {
       if (key === '退格') {
         this.adminPass = this.adminPass.slice(0, -1)
       } else if (key === '确认') {
-        this.isShow = true
-        setTimeout(() => {
-          this.checkAdminPass(this.adminPass, this.$store.state.atmId)
-        }, 2000)
-        // 执行确认操作
+        if (this.adminPass === '') {
+          this.messageContent = '员工号不能空白'
+          this.oneORtwo = false
+          this.messageDialog = true
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 2000)
+        } else {
+          this.isShow = true
+          setTimeout(() => {
+            this.checkAdminPass(this.adminPass, this.$store.state.atmId)
+          }, 2000)
+        }
+      } else if (key === '重置') {
+        this.adminPass = ''
       } else {
         this.adminPass += key
       }
@@ -107,16 +119,20 @@ export default {
           if (this.num <= 0) {
             this.messageContent = '账号已经锁定,请到柜台解锁后重试！'
             this.messageDialog = true
-            this.isDisButt = true
             this.oneORtwo = false
+            setTimeout(() => {
+              this.messageDialog = false
+            }, 2000)
             setTimeout(() => {
               this.navigateToDeskTop()
             }, 3000)
           } else {
-            this.isDisButt = false
             this.oneORtwo = true
             this.messageContent = '员工账号对应密码错误，请重试！'
             this.messageDialog = true
+            setTimeout(() => {
+              this.messageDialog = false
+            }, 2000)
           }
         }
       })
@@ -126,17 +142,17 @@ export default {
 </script>
 <style>
 .desktopBack {
-      position: relative;
-      width: 1440px;
-      height: 1024px;
-      background: linear-gradient(118.86deg, rgb(14, 20, 112) 21.912%,rgba(23, 21, 15, 0) 98.654%);
-      border: 10px solid rgb(0, 0, 0);
-      border-radius: 20px;
+  position: relative;
+  width: 1440px;
+  height: 1024px;
+  background: linear-gradient(118.86deg, rgb(14, 20, 112) 21.912%,rgba(23, 21, 15, 0) 98.654%);
+  border: 10px solid rgb(0, 0, 0);
+  border-radius: 20px;
 }
 .container {
-    display: flex;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
+  display: flex;
+  justify-content: left;
+  align-items: center; /* 垂直居中 */
 }
 
 .passBack {
@@ -212,24 +228,5 @@ export default {
     letter-spacing: 0px;
     text-align: center;
     text-shadow: 2px 2px 4px rgba(3, 75, 21, 0.5);
-}
-
-.custom-dialog .el-dialog__header {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__body {
-  background-color: rgb(172, 140, 140);
-}
-
-.custom-dialog .el-dialog__footer {
-  background-color: rgb(172, 140, 140);
-  text-align: center;
-}
-.dialog-content {
-  font-size: 72px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: rgb(224, 32, 32);
-  text-align: center;
 }
 </style>

@@ -102,11 +102,6 @@ export default {
         this.adminId += key
       }
     },
-    closeDialog () {
-      this.messageDialog = false
-      this.oneORtwo = false
-      this.adminId = ''
-    },
     checkAdminId (adminId, atmId) {
       if (this.num >= 1) {
         const url = '/admin/check-id?adminId=' + adminId + '&' + 'atmId=' + atmId
@@ -141,6 +136,11 @@ export default {
               }, 3000)
             }
           }
+        }).catch(error => {
+          this.isShow = false
+          this.adminId = ''
+          this.oneORtwo = false
+          this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
         })
       } else {
         this.isShow = false
@@ -150,6 +150,13 @@ export default {
           this.navigateToDeskTop()
         }, 2000)
       }
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   }
 }

@@ -231,6 +231,9 @@ export default {
             this.navigateToUserTakeSuccess(this.takeAmount, res.data.recordId)
           }, 5000)
         }
+      }).catch(error => {
+        this.isShow = false
+        this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
     },
     isEmptyOROver () {
@@ -267,6 +270,13 @@ export default {
     },
     resetTimer () {
       this.countdownTime = 60
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   },
   beforeDestroy () {

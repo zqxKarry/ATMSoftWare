@@ -94,16 +94,16 @@ export default {
       const url = '/card/check-bala?cardid=' + cardId
       request.get(url).then(res => {
         if (res.code === '0') {
-          this.isShow = true
           this.notShow = false
           this.balance = res.data.cardBalance.toFixed(2)
         } else {
-          this.isShow = false
           this.notShow = true
           setTimeout(() => {
             this.navigateToOperation()
           }, 3000)
         }
+      }).catch(error => {
+        this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
     },
     startTimer () {
@@ -127,6 +127,13 @@ export default {
     },
     resetTimer () {
       this.countdownTime = 60
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   },
   beforeDestroy () {

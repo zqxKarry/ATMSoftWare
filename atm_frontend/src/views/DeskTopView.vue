@@ -142,18 +142,21 @@ export default {
       })
     },
     checkCardId (cardId) {
+      this.readingCardDialog = false
+      this.$nextTick(() => {
+        this.$refs.insertcardref.Rreturn()
+      })
       const url = '/card/check-id?cardid=' + cardId
       request.get(url).then(res => {
-        this.readingCardDialog = false
-        this.$nextTick(() => {
-          this.$refs.insertcardref.Rreturn()
-        })
         if (res.code === '0') {
           this.navigateToUserCheckPass(cardId)
         } else {
           this.message = res.msg
           this.returnCard()
         }
+      }).catch(error => {
+        this.cardId = ''
+        this.showErrorMessage(error.message)
       })
     },
     navigateToUserCheckPass (cardId) {
@@ -173,6 +176,13 @@ export default {
       } else {
         return true
       }
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   }
 }

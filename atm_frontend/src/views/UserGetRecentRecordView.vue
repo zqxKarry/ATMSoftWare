@@ -124,6 +124,8 @@ export default {
         } else {
           this.messageTip = '系统错误，请退出重试或者到柜台办理相关业务'
         }
+      }).catch(error => {
+        this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
     },
     formatTransactionMethod (opType) {
@@ -186,6 +188,13 @@ export default {
     },
     resetTimer () {
       this.countdownTime = 60
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   },
   beforeDestroy () {

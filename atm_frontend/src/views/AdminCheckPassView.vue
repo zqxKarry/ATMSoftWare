@@ -135,7 +135,19 @@ export default {
             }, 2000)
           }
         }
+      }).catch(error => {
+        this.isShow = false
+        this.adminPass = ''
+        this.oneORtwo = false
+        this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   }
 }

@@ -20,12 +20,20 @@
         <label class="balaFontStyle" v-show="isShow">机箱最大容量<span class="special"> 1000 </span>张百元钞票<br>还可放入<span class="special"> {{ this.restCount }} </span>张</label>
         <label class="balaFontStyle" v-show="notShow">机器出现故障或者网络不稳定,请稍后再试</label>
       </div>
+      <div v-if="messageDialog" class = "dialog-overlay">
+        <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
+          <!-- 对话框内容 -->
+          <span class="dialog-title">重要提示</span>
+          <div class="dialog-content">{{ this.message }}</div>
+        </div>
+      </div>
     </div>
 </template>
 <script>
 import request from '@/utils/request'
 import KeyPad from '@/components/KeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
+import '@/assets/CSS/messageDialog.css'
 
 export default {
   components: {
@@ -35,6 +43,7 @@ export default {
   data () {
     return {
       messageDialog: false,
+      messageContent: '',
       balance: 0,
       isShow: true,
       notShow: false,
@@ -69,7 +78,19 @@ export default {
             this.navigateToOperation()
           }, 3000)
         }
+      }).catch(error => {
+        this.isShowLoading = false
+        this.adminPass = ''
+        this.oneORtwo = false
+        this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
+    },
+    showErrorMessage (msg) {
+      this.messageContent = msg
+      this.messageDialog = true
+      setTimeout(() => {
+        this.messageDialog = false
+      }, 3000)
     }
   }
 }

@@ -1,7 +1,6 @@
 package t01.six.atm_backend.entity;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

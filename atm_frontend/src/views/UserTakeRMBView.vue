@@ -237,7 +237,7 @@ export default {
       })
     },
     isEmptyOROver () {
-      if (this.takeAmount === '0' && this.takeAmount === '') {
+      if (parseInt(this.takeAmount) === 0 || this.takeAmount === '') {
         // 是0或者空
         return 1
       } else if (Number(this.takeAmount) % 100 !== 0) {

@@ -108,7 +108,6 @@ export default {
         request.get(url).then(res => {
           /* 对结果进行判断 */
           this.isShow = false
-          console.log(res)
           if (res.code === '0') {
             this.navigateToAdminCheckPass(adminId)
           } else {

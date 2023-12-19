@@ -43,6 +43,7 @@ import Keypad from '../components/KeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
 import '@/assets/CSS/messageDialog.css'
 import '@/assets/CSS/timeCounter.css'
+import { SHA256 } from 'crypto-js'
 
 export default {
   components: {
@@ -104,6 +105,11 @@ export default {
         })
       }
     },
+    // 对密码进行加密
+    encryptPassword (password) {
+      const hashedPassword = SHA256(password).toString()
+      return hashedPassword
+    },
     handleKeyClick (key) {
       if (key === '退格') {
         this.cardPass = this.cardPass.slice(0, -1)
@@ -118,8 +124,11 @@ export default {
       }
     },
     checkCardPass (cardPass) {
+      // 为密码加密
+      const encryptedPassword = this.encryptPassword(cardPass)
+      console.log(encryptedPassword) // 输出加密后的密码
       const cardId = this.$route.params.cardId
-      const url = '/card/check-pass?cardid=' + cardId + '&cardpassword=' + cardPass
+      const url = '/card/check-pass?cardid=' + cardId + '&cardpassword=' + encryptedPassword
       request.get(url).then(res => {
         this.isShow = false
         if (res.code === '0') {

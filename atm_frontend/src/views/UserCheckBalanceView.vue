@@ -20,7 +20,9 @@
         </div>
       </div>
       <div class="balanceBox">
-        <label class="balaFontStyle" v-show="isShow">您的余额共计:<span class="special"> {{ this.balance }} </span>元</label><br>
+        <label class="balaFontStyle" v-show="isShow">您的余额共计: <span class="special"> {{ this.balance }} </span>元</label><br>
+        <label class="balaFontStyle" v-show="isShow">可取余额共计: <span class="special"> {{ this.takeBalance }} </span>元</label><br>
+        <label class="balaFontStyle" v-show="isShow">可转账余额共计:<span class="special"> {{ this.balance }} </span>元</label><br>
         <label class="balaFontStyle" v-show="notShow">机器出现故障或者网络不稳定,请稍后再试</label>
       </div>
       <div v-if="messageDialog" class = "dialog-overlay">
@@ -51,6 +53,7 @@ export default {
       timer: null,
       messageDialog: false,
       balance: 0,
+      takeBalance: 0,
       isShow: true,
       notShow: false
     }
@@ -96,6 +99,7 @@ export default {
         if (res.code === '0') {
           this.notShow = false
           this.balance = res.data.cardBalance.toFixed(2)
+          this.takeBalance = (this.balance - this.balance % 100).toFixed(2)
         } else {
           this.notShow = true
           setTimeout(() => {

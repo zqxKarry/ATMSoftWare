@@ -205,7 +205,7 @@ export default {
             this.countFinishDialog = true
             setTimeout(() => {
               this.countFinishDialog = false
-            }, 10000)
+            }, 3000)
           } else {
             this.storeNum = res.data.amount / 100
             this.restNum = this.reallyNum - this.storeNum
@@ -213,7 +213,7 @@ export default {
             setTimeout(() => {
               this.countFinishDialog = false
               this.navigateToUserStoreSuccess(res.data.recordId)
-            }, 10000)
+            }, 5000)
           }
         } else if (res.code === '4') {
           // 一分钱没存
@@ -222,7 +222,7 @@ export default {
           this.countFinishDialog = true
           setTimeout(() => {
             this.countFinishDialog = false
-          }, 10000)
+          }, 3000)
         } else {
           this.isAtmBoxFull = false
           this.storeNum = res.data.amount / 100
@@ -231,7 +231,7 @@ export default {
           setTimeout(() => {
             this.countFinishDialog = false
             this.navigateToUserStoreSuccess(res.data.recordId)
-          }, 5000)
+          }, 3000)
         }
       }).catch(error => {
         this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)

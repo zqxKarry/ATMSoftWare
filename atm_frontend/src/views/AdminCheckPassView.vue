@@ -39,6 +39,7 @@ import KeyPad from '../components/KeyPad.vue'
 import AdminKeyPad from '../components/AdminKeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
 import { mapMutations } from 'vuex'
+import { SHA256 } from 'crypto-js'
 
 export default {
   components: {
@@ -102,17 +103,20 @@ export default {
         this.adminPass += key
       }
     },
-    closeDialog () {
-      this.messageDialog = false
-      this.adminPass = ''
+    // 对密码进行加密
+    encryptPassword (password) {
+      const hashedPassword = SHA256(password).toString()
+      return hashedPassword
     },
     checkAdminPass (adminPass, atmId) {
+      // 加密
+      const encryptedPassword = this.encryptPassword(adminPass)
       const adminId = this.$route.params.adminId
-      const url = '/admin/check-pass?adminId=' + adminId + '&atmId=' + atmId + '&adminPass=' + adminPass
+      const url = '/admin/check-pass?adminId=' + adminId + '&atmId=' + atmId + '&adminPass=' + encryptedPassword
       request.get(url).then(res => {
         this.isShow = false
         if (res.code === '0') {
-          this.setAdminInfo(res.data)
+          sessionStorage.setItem('adminInfo', JSON.stringify(res.data))
           this.navigateToAdminOperation()
         } else {
           this.num = res.data.num

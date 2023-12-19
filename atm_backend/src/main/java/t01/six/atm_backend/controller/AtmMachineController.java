@@ -32,16 +32,18 @@ public class AtmMachineController {
 
     @PostMapping("/admin-addrmb")
     public Result<?> adminAddRMB(@RequestParam Integer addCount,
-                                @RequestParam(defaultValue = "") String atmId)
+                                @RequestParam(defaultValue = "") String atmId,
+                                @RequestParam(defaultValue = "") String adminId)
     {
-        return atmMachineService.adminAddRMB(addCount, atmId);
+        return atmMachineService.adminAddRMB(addCount, atmId,adminId);
     }
 
     @PostMapping("/admin-takermb")
     public Result<?> adminTakeRMB(@RequestParam Integer takeCount,
-                                @RequestParam(defaultValue = "") String atmId)
+                                @RequestParam(defaultValue = "") String atmId,
+                                @RequestParam(defaultValue = "") String adminId)
     {
-        return atmMachineService.adminTakeRMB(takeCount, atmId);
+        return atmMachineService.adminTakeRMB(takeCount, atmId,adminId);
     }
 
     @PostMapping("/admin-addpaper")

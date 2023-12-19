@@ -85,7 +85,9 @@ export default {
       }
     },
     addRMBCount (addCount, atmId) {
-      const url = '/atm/admin-addrmb?addCount=' + addCount + '&' + 'atmId=' + atmId
+      const adminInfo = JSON.parse(sessionStorage.getItem('adminInfo'))
+      const adminId = adminInfo.adminId
+      const url = '/atm/admin-addrmb?addCount=' + addCount + '&atmId=' + atmId + '&adminId=' + adminId
       request.post(url).then(res => {
         this.isShow = false
         if (res.code === '0') {

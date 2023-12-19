@@ -87,7 +87,9 @@ export default {
       }
     },
     takeRMBCount (takeCount, atmId) {
-      const url = '/atm/admin-takermb?takeCount=' + takeCount + '&' + 'atmId=' + atmId
+      const adminInfo = JSON.parse(sessionStorage.getItem('adminInfo'))
+      const adminId = adminInfo.adminId
+      const url = '/atm/admin-takermb?takeCount=' + takeCount + '&atmId=' + atmId + '&adminId=' + adminId
       request.post(url).then(res => {
         this.isShow = false
         if (res.code === '0') {

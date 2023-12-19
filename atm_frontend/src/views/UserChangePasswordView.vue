@@ -42,6 +42,7 @@ import Keypad from '../components/KeyPad.vue'
 import atmheader from '../components/atmHeader.vue'
 import '@/assets/CSS/messageDialog.css'
 import '@/assets/CSS/timeCounter.css'
+import { SHA256 } from 'crypto-js'
 
 export default {
   components: {
@@ -165,14 +166,12 @@ export default {
         this.cardPass += key
       }
     },
-    closeDialog () {
-      this.messageDialog = false
-      this.cardPass = ''
-    },
     checkCardPass (cardPass) {
+      // 为密码加密
+      const encryptedPassword = this.encryptPassword(cardPass)
       const cardInfo = JSON.parse(sessionStorage.getItem('cardInfo'))
       const cardId = cardInfo.cardId
-      const url = '/card/check-pass?cardid=' + cardId + '&cardpassword=' + cardPass
+      const url = '/card/check-pass?cardid=' + cardId + '&cardpassword=' + encryptedPassword
       request.get(url).then(res => {
         this.isShow = false
         if (res.code === '0') {
@@ -224,10 +223,18 @@ export default {
         return false
       }
     },
+    // 对密码进行加密
+    encryptPassword (password) {
+      const hashedPassword = SHA256(password).toString()
+      return hashedPassword
+    },
     changeCardPass (newPass) {
+      // 为密码加密
+      const encryptedPassword = this.encryptPassword(newPass)
+      // console.log(encryptedPassword) // 输出加密后的密码
       const cardInfo = JSON.parse(sessionStorage.getItem('cardInfo'))
       const cardId = cardInfo.cardId
-      const url = '/card/change-password?cardid=' + cardId + '&' + 'newpassword=' + newPass
+      const url = '/card/change-password?cardid=' + cardId + '&' + 'newpassword=' + encryptedPassword
       request.post(url).then(res => {
         this.isShow = false
         if (res.code === '0') {

@@ -15,6 +15,7 @@ import t01.six.atm_backend.entity.CardRecord;
 import t01.six.atm_backend.mapper.AtmMachineMapper;
 import t01.six.atm_backend.mapper.CardMapper;
 import t01.six.atm_backend.mapper.CardRecordMapper;
+import t01.six.atm_backend.service.AtmMachineService;
 import t01.six.atm_backend.service.CardService;
 import t01.six.atm_backend.utils.Result;
 
@@ -27,6 +28,8 @@ public class CardServiceImpl implements CardService{
     AtmMachineMapper atmMachineMapper;
     @Resource
     CardRecordMapper cardRecordMapper;
+    @Resource
+    AtmMachineService atmMachineService;
 
     @Override
     public Result<?> checkCardId(String cardid) {
@@ -87,7 +90,6 @@ public class CardServiceImpl implements CardService{
 
     @Override
     public Result<?> userStoreRMB(String cardid, Integer reallyNum, String atmId) {
-        System.out.println(cardid + " " +atmId);
         Card card = cardMapper.selectById(cardid);
         AtmMachine atm = atmMachineMapper.selectById(atmId);
         if(card==null || atm == null){
@@ -125,6 +127,7 @@ public class CardServiceImpl implements CardService{
             atm.setAtmBalance(atmBalance);
             atmMachineMapper.updateById(atm);
             CardRecord newRecord = addTransactionRecord(cardid, "store", "atm", reallyNum*100.00, atmId, atmId,orginBalance);
+            atmMachineService.addTransactionRecord(cardid, "add",reallyNum*100.00, atmId,"", "user", atmBalance);
             result.setData(newRecord);
             return result;
         }
@@ -164,6 +167,7 @@ public class CardServiceImpl implements CardService{
             atm.setAtmBalance(atmBalance);
             atmMachineMapper.updateById(atm);
             CardRecord newRecord = addTransactionRecord(cardid, "take", "atm", takeAmount, atmId, atmId,orginBalance);
+            atmMachineService.addTransactionRecord(cardid, "take",takeAmount, atmId,"", "user", atmBalance);
             result.setCode("4");
             result.setMsg("成功");
             result.setData(newRecord);

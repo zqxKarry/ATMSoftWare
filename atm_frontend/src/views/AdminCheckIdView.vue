@@ -59,7 +59,7 @@ export default {
   },
   methods: {
     whenRefresh () {
-      this.num = 3
+      this.num = 2
       this.messageDialog = false
       this.messageContent = '' // 提示内容
       this.oneORtwo = true
@@ -114,10 +114,10 @@ export default {
             if (res.code === '1') {
               this.oneORtwo = true
               this.messageContent = '员工号错误！请重新输入!\n'
-              this.num--
               this.messageDialog = true
               setTimeout(() => {
                 this.messageDialog = false
+                this.num--
               }, 3000)
             } else if (res.code === '2') {
               this.oneORtwo = false

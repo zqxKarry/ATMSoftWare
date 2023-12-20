@@ -14,11 +14,11 @@
         </div>
       </div>
         <div>
-          <el-button v-show="isShowNotPrint" class="butt" style="top: 850px;margin-left: 0px;" @click="confirmTransfer">
-            <label class="fontStyle"><i class="el-icon-back"></i>确认</label>
+          <el-button v-show="isShowNotPrint" class="butt" style="top: 850px;margin-left: 0px;" @click="navigateToUserOperation">
+            <label class="fontStyle"><i class="el-icon-back"></i>取消业务</label>
           </el-button>
-          <el-button  v-show="isShowNotPrint" class="butt" style="top: 850px; margin-left: 1130px" @click="navigateToUserOperation">
-            <label class="fontStyle">取消业务<i class="el-icon-right"></i></label>
+          <el-button  v-show="isShowNotPrint" class="butt" style="top: 850px; margin-left: 1130px" @click="confirmTransfer">
+            <label class="fontStyle">确认<i class="el-icon-right"></i></label>
           </el-button>
           <el-button v-show="isShowPrint" class="butt" style="top: 850px;margin-left: 0px;" @click="getRecordInfo">
             <label class="fontStyle"><i class="el-icon-back"></i>打印凭条</label>
@@ -136,9 +136,9 @@ export default {
           }, 3000)
         } else {
           this.messageContent = res.msg
+          this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
-            this.navigateToUserOperation()
           }, 3000)
         }
       }).catch(error => {

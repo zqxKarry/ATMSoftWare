@@ -26,7 +26,7 @@
         <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
           <!-- 对话框内容 -->
           <span class="dialog-title">重要提示</span>
-          <div class="dialog-content">{{ this.message }}</div>
+          <div class="dialog-content">{{ this.messageContent }}</div>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@ export default {
     return {
       messageDialog: false,
       addCount: '',
-      message: '',
+      messageContent: '',
       isShow: false
     }
   },
@@ -64,7 +64,7 @@ export default {
         this.addCount = this.addCount.slice(0, -1)
       } else if (key === '确认') {
         if (this.addCount === '' || Number(this.addCount) === 0) {
-          this.message = '添加数量不能为0'
+          this.messageContent = '添加数量不能为0'
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
@@ -91,21 +91,21 @@ export default {
       request.post(url).then(res => {
         this.isShow = false
         if (res.code === '0') {
-          this.message = '添加成功，您辛苦了！'
+          this.messageContent = '添加成功，您辛苦了！'
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
           }, 3000)
           this.addCount = ''
         } else if (res.code === '1') {
-          this.message = res.msg
+          this.messageContent = res.msg
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
             this.navigateToDeskTop()
           }, 3000)
         } else {
-          this.message = res.msg
+          this.messageContent = res.msg
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false

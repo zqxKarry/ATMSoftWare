@@ -114,11 +114,19 @@ export default {
       if (key === '退格') {
         this.cardPass = this.cardPass.slice(0, -1)
       } else if (key === '确认') {
-        this.isShow = true
-        setTimeout(() => {
-          this.checkCardPass(this.cardPass)
-        }, 2000)
-        // 执行确认操作
+        if (this.cardPass === '' || this.cardPass.length !== 6) {
+          this.oneORtwo = false
+          this.messageContent = '请输入六位数字密码'
+          this.messageDialog = true
+          setTimeout(() => {
+            this.messageDialog = false
+          }, 3000)
+        } else {
+          this.isShow = true
+          setTimeout(() => {
+            this.checkCardPass(this.cardPass)
+          }, 2000)
+        }
       } else {
         this.cardPass += key
       }
@@ -150,7 +158,7 @@ export default {
             this.isDisButt = true
             this.oneORtwo = false
             setTimeout(() => {
-              this.navigateToDeskTop()
+              this.navigateToDeskTopAndReturnCard()
             }, 3000)
           } else {
             this.isDisButt = false
@@ -166,6 +174,7 @@ export default {
       }).catch(error => {
         this.isShow = false
         this.cardPass = ''
+        this.oneORtwo = false
         this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
     },

@@ -24,7 +24,7 @@
         <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
           <!-- 对话框内容 -->
           <span class="dialog-title">重要提示</span>
-          <div class="dialog-content">{{ this.message }}</div>
+          <div class="dialog-content">{{ this.messageContent }}</div>
         </div>
       </div>
     </div>
@@ -79,9 +79,6 @@ export default {
           }, 3000)
         }
       }).catch(error => {
-        this.isShowLoading = false
-        this.adminPass = ''
-        this.oneORtwo = false
         this.showErrorMessage('网络错误\n请稍后重试或者更换机器' + error.message)
       })
     },

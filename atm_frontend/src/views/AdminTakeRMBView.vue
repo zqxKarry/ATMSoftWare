@@ -27,7 +27,7 @@
         <div class="custom-dialog" :class="{'dialog-left': dialogLeft}">
           <!-- 对话框内容 -->
           <span class="dialog-title">重要提示</span>
-          <div class="dialog-content">{{ this.message }}</div>
+          <div class="dialog-content">{{ this.messageContent }}</div>
         </div>
       </div>
       </div>
@@ -50,7 +50,7 @@ export default {
     return {
       messageDialog: false,
       takeCount: '',
-      message: '',
+      messageContent: '',
       isShow: false
     }
   },
@@ -67,7 +67,7 @@ export default {
         this.takeCount = this.takeCount.slice(0, -1)
       } else if (key === '确认') {
         if (this.takeCount === '' || Number(this.takeCount) === 0) {
-          this.message = '取走数量不能为0'
+          this.messageContent = '取走数量不能为0'
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
@@ -93,7 +93,7 @@ export default {
       request.post(url).then(res => {
         this.isShow = false
         if (res.code === '0') {
-          this.message = '取款成功,请您遵守职责正确处理钱款！'
+          this.messageContent = '取款成功,请您遵守职责正确处理钱款！'
           this.messageDialog = true
           this.isDisButt = false
           this.takeCount = ''
@@ -101,14 +101,14 @@ export default {
             this.messageDialog = false
           }, 3000)
         } else if (res.code === '1') {
-          this.message = res.msg
+          this.messageContent = res.msg
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false
             this.navigateToDeskTop()
           }, 3000)
         } else {
-          this.message = res.msg
+          this.messageContent = res.msg
           this.messageDialog = true
           setTimeout(() => {
             this.messageDialog = false

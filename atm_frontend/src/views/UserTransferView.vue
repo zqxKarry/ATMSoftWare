@@ -106,7 +106,7 @@ export default {
       this.$router.push({
         name: 'userconfirminfo',
         params: {
-          amount: amount,
+          amount: Number(amount),
           cardid2: cardid2
         }
       })
@@ -171,23 +171,12 @@ export default {
             }, 2000)
           }
         }
-        // 执行确认操作
       } else {
         this.str += key
       }
     },
-    navigateToUserTakeSuccess (takeAmount, recordid) {
-      console.log(takeAmount)
-      this.$router.push({
-        name: 'usertakesuccess',
-        params: {
-          takeAmount: Number(takeAmount),
-          recordid: recordid
-        }
-      })
-    },
     checkAmout () {
-      if (Number(this.str) === 0 && this.takeAmount === '') {
+      if (Number(this.str) === 0 || this.str === '') {
         // 是0或者空
         return 1
       } else if (Number(this.str) > 1000) {
